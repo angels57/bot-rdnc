@@ -26,7 +26,7 @@ def retry_on_timeout(retries=3, delay=2):
                         logger.info(f"Reintentando en {delay} segundos...")
                         await asyncio.sleep(delay)  # Esperar antes de reintentar
 
-                raise last_exception  # Si se agotan los intentos, lanzar la última excepción
+            raise last_exception  # Si se agotan los intentos, lanzar la última excepción
 
         return wrapper
 

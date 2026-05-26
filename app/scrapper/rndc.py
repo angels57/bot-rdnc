@@ -1,5 +1,7 @@
 """Scraper para descargar datos estadísticos de RNDC."""
 
+from pathlib import Path
+
 from app.core.logging import get_app_logger
 from app.scrapper.browser import new_rndc_page
 from app.scrapper.selectors import (
@@ -45,8 +47,26 @@ async def playwright_rndc():
 
         # Guardar archivo descargado
         download = await download_info.value
-        await download.save_as("data/RNDC.xlsx")
-        logger.info("✅ Archivo descargado exitosamente en data/RNDC.xlsx")
+        dest = Path("data/RNDC.xlsx")
+        await download.save_as(dest)
+
+        # ✅ Validar que el archivo no esté vacío ni sea una respuesta HTML de error
+        if not dest.exists() or dest.stat().st_size == 0:
+            logger.error("❌ Descarga completada pero el archivo está vacío.")
+            return False
+
+        # Los archivos XLSX válidos comienzan con la firma PK (ZIP)
+        with dest.open("rb") as f:
+            magic = f.read(4)
+        if magic != b"PK\x03\x04":
+            logger.error(
+                f"❌ El archivo descargado no es un XLSX válido (firma: {magic!r}). "
+                "Probablemente el servidor devolvio una página HTML de error."
+            )
+            dest.unlink(missing_ok=True)  # Eliminar archivo corrupto
+            return False
+
+        logger.info(f"✅ Archivo descargado y validado exitosamente en {dest}")
 
         await page.wait_for_timeout(2000)
 

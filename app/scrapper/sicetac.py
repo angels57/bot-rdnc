@@ -30,7 +30,7 @@ logger = get_app_logger("main")
 async def abrir_sicetac(page):
     """Abre la página de SICETAC y espera a que el selector de origen esté disponible."""
     try:
-        await page.goto(URL_SICETAC, timeout=15000)
+        await page.goto(URL_SICETAC, timeout=15000, wait_until="networkidle")
         await page.wait_for_selector(SELECTOR_ORIGEN_VIAJE, timeout=10000)
     except Exception as e:
         logger.error(f"Error al abrir SICETAC: {e!s}")
@@ -95,7 +95,7 @@ async def retryable_action(page, selector: str, name: str, action, retries=2, de
                 logger.error(
                     f"❌ FALLA DEFINITIVA en {name} después de {retries} intentos"
                 )
-                raise last_error
+                raise last_error from last_error
 
 
 async def playwright_sicetac(params: SicetacParams) -> str | bool:
@@ -192,15 +192,11 @@ async def playwright_sicetac(params: SicetacParams) -> str | bool:
         )
 
         # =--- CAPTCHA ---
-        await retryable_action(
+        # Obtener el texto del captcha y calcular la suma en un solo paso
+        capcha_text = await retryable_action(
             page,
             SELECTOR_CAPTCHA,
-            "Selector de captcha",
-            lambda: page.locator(SELECTOR_CAPTCHA).text_content(),
-        )
-        capcha_text = await safe_action(
             "Obtener texto del captcha",
-            SELECTOR_CAPTCHA,
             lambda: page.locator(SELECTOR_CAPTCHA).text_content(),
         )
         sum_captcha = sum_detected(str(capcha_text))

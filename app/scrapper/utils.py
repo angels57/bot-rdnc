@@ -1,6 +1,7 @@
 "Utilidades para el scrapper de RNDC."
 
 import asyncio
+import contextlib
 import json
 import re
 from datetime import date
@@ -108,7 +109,7 @@ async def export_sicetac_combinaciones(
                         await page.locator(SELECTOR_ORIGEN_VIAJE).select_option(
                             label=origen
                         )
-                except:
+                except Exception:
                     # 👉 No siempre hay navegación, es normal
                     await page.locator(SELECTOR_ORIGEN_VIAJE).select_option(
                         label=origen
@@ -171,12 +172,8 @@ async def export_sicetac_combinaciones(
         # 7. Limpieza completa (CRÍTICO en Windows)
         # ─────────────────────────────────────────────
         for obj in (context, browser):
-            try:
+            with contextlib.suppress(Exception):
                 await obj.close()
-            except Exception:
-                pass
 
-        try:
+        with contextlib.suppress(Exception):
             await playwright.stop()
-        except Exception:
-            pass
