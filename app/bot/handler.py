@@ -32,12 +32,16 @@ class BotHandler:
             try:
                 with PATH_LOOKUP.open("r", encoding="utf-8") as f:
                     self.lookup = json.load(f)
-                logger.info(f"💾 Lookup table de normalización cargado exitosamente ({len(self.lookup)} entradas)")
+                logger.info(
+                    f"💾 Lookup table de normalización cargado exitosamente ({len(self.lookup)} entradas)"
+                )
             except Exception as e:
                 logger.error(f"Error al cargar el lookup table: {e!s}")
                 self.lookup = {}
         else:
-            logger.warning(f"⚠️ No se encontró el lookup table en {PATH_LOOKUP}. Se utilizará fallback fuzzy completo.")
+            logger.warning(
+                f"⚠️ No se encontró el lookup table en {PATH_LOOKUP}. Se utilizará fallback fuzzy completo."
+            )
             self.lookup = {}
 
     def _run_scrapping(
@@ -94,8 +98,12 @@ class BotHandler:
             "Iniciando proceso de consulta de ruta con los siguientes parámetros:"
         )
         # Normalizar los nombres de origen y destino usando la lista combinada de municipios y el lookup table
-        origen_df = normalizar_sicetac_a_rndc(params.origen, self.municipios, self.lookup)
-        destino_df = normalizar_sicetac_a_rndc(params.destino, self.municipios, self.lookup)
+        origen_df = normalizar_sicetac_a_rndc(
+            params.origen, self.municipios, self.lookup
+        )
+        destino_df = normalizar_sicetac_a_rndc(
+            params.destino, self.municipios, self.lookup
+        )
 
         if not origen_df or not destino_df:
             raise ValueError(

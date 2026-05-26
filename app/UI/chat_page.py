@@ -100,11 +100,24 @@ def render():
 
     origenes, destinos = load_sicetac_ciudades()
 
+    with st.expander("❓ Instrucciones de uso"):
+        st.write(
+            """
+            1. Selecciona el **origen** y **destino** de la ruta.
+            2. Elige la **configuración del vehículo** que deseas cotizar.
+            3. Define la **condición de carga** (CARGADO o VACIO).
+            4. Selecciona el tipo de **carrocería**.
+            5. Indica el **tipo de carga** (General o Granel Sólido).
+            6. Especifica las **horas de cargue/descargue**.
+            7. Haz clic en "Consultar ruta" para obtener la cotización.
+            """
+        )
+
     col1, col2, col3 = st.columns([3, 5, 5])
     with col1:
         configuracion = st.selectbox(
             "COD vehiculo",
-            [c["id"] for c in CONFIGURACIONES_VEHICULO],
+            [f"{c['id']} - {c['valor']}" for c in CONFIGURACIONES_VEHICULO],
         )
         condicion_carga = st.selectbox(
             "Condición de carga",
