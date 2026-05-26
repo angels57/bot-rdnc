@@ -63,7 +63,7 @@ def ejecutar(
 
     bot = get_bot()
 
-    st.session_state.loading = True
+    state.set_loading(True)
     try:
         with st.spinner("Consultando ruta, por favor espera..."):
             params = SicetacParams(
@@ -78,7 +78,7 @@ def ejecutar(
 
             resultado = bot.run(params)
 
-            st.session_state.resultado = resultado
+            state.set_resultado(resultado)
     except ValueError as e:
         st.error(
             f"Error: Ciudad o municipio no encontrado - seleccione un origen y destino válidos. {e}"
@@ -87,7 +87,7 @@ def ejecutar(
         st.error(f"Error inesperado al consultar la ruta: {e!s}")
         logger.error(f"Error inesperado al consultar la ruta: {e!s}")
     finally:
-        st.session_state.loading = False
+        state.set_loading(False)
 
 
 def render():
@@ -168,9 +168,6 @@ def render():
             key="tipo_carga",
         )
 
-    if "loading" not in st.session_state:
-        st.session_state.loading = False
-
     # Botón fuera del handler: se deshabilita cuando `loading` es True
     st.button(
         "Consultar ruta",
@@ -184,7 +181,9 @@ def render():
             tipo_carga,
             horas_cargue_descargue,
         ),
-        disabled=st.session_state.loading,
+        disabled=state.is_loading(),
     )
-    if "resultado" in st.session_state and st.session_state.resultado:
-        components.render_result(st.session_state.resultado)
+
+    resultado = state.get_resultado()
+    if resultado:
+        components.render_result(resultado)

@@ -14,14 +14,18 @@ def main():
     # 1. Cargar las opciones de SICETAC
     sicetac_path = Path("data/sicetac_options.json")
     if not sicetac_path.exists():
-        print(f"❌ Error: No se encontró el archivo de opciones de SICETAC en {sicetac_path}")
+        print(
+            f"❌ Error: No se encontró el archivo de opciones de SICETAC en {sicetac_path}"
+        )
         return
 
     with open(sicetac_path, encoding="utf-8") as f:
         sicetac_data = json.load(f)
 
     # Unificar origen y destino para tener la lista completa y única
-    sicetac_entries = sorted(set(sicetac_data.get("origen", []) + sicetac_data.get("destino", [])))
+    sicetac_entries = sorted(
+        set(sicetac_data.get("origen", []) + sicetac_data.get("destino", []))
+    )
     print(f"📦 Cargadas {len(sicetac_entries)} entradas únicas de SICETAC.")
 
     # 2. Cargar RNDC.xlsx y extraer pares únicos de Municipio + Departamento
@@ -34,18 +38,32 @@ def main():
     df = pl.read_excel(rndc_path)
 
     print("🧹 Extrayendo combinaciones únicas de origen y destino en RNDC...")
-    origenes = df.select([
-        pl.col("MUNICIPIOORIGEN").alias("rndc_full"),
-        pl.col("DEPARTAMENTOORIGEN").alias("dpto")
-    ]).drop_nulls().unique()
+    origenes = (
+        df.select(
+            [
+                pl.col("MUNICIPIOORIGEN").alias("rndc_full"),
+                pl.col("DEPARTAMENTOORIGEN").alias("dpto"),
+            ]
+        )
+        .drop_nulls()
+        .unique()
+    )
 
-    destinos = df.select([
-        pl.col("MUNICIPIODESTINO").alias("rndc_full"),
-        pl.col("DEPARTAMENTODESTINO").alias("dpto")
-    ]).drop_nulls().unique()
+    destinos = (
+        df.select(
+            [
+                pl.col("MUNICIPIODESTINO").alias("rndc_full"),
+                pl.col("DEPARTAMENTODESTINO").alias("dpto"),
+            ]
+        )
+        .drop_nulls()
+        .unique()
+    )
 
     rndc_pairs = pl.concat([origenes, destinos]).unique().to_dicts()
-    print(f"📦 Encontrados {len(rndc_pairs)} pares únicos de Municipio-Departamento en RNDC.")
+    print(
+        f"📦 Encontrados {len(rndc_pairs)} pares únicos de Municipio-Departamento en RNDC."
+    )
 
     # 3. Pre-parsear todos los candidatos RNDC
     parsed_rndc_list = []
@@ -54,11 +72,13 @@ def main():
         dpto = item["dpto"].strip()
 
         parsed = parse_rndc(rndc_full)
-        parsed_rndc_list.append({
-            "rndc_full": rndc_full,
-            "municipio_clean": clean_text(parsed["municipio"]),
-            "dpto_clean": clean_text(dpto)
-        })
+        parsed_rndc_list.append(
+            {
+                "rndc_full": rndc_full,
+                "municipio_clean": clean_text(parsed["municipio"]),
+                "dpto_clean": clean_text(dpto),
+            }
+        )
 
     # 4. Resolver cada entrada SICETAC
     lookup = {}
@@ -90,7 +110,11 @@ def main():
                         best_dpto_match = c["dpto_clean"]
 
                 if best_dpto_score >= 80 and best_dpto_match:
-                    candidates = [c for c in parsed_rndc_list if c["dpto_clean"] == best_dpto_match]
+                    candidates = [
+                        c
+                        for c in parsed_rndc_list
+                        if c["dpto_clean"] == best_dpto_match
+                    ]
                 else:
                     candidates = parsed_rndc_list
         else:
@@ -106,7 +130,9 @@ def main():
 
             # 2. Comparar Lugar + Municipio (si existe un lugar distinto)
             if lugar_clean and lugar_clean != muni_clean:
-                full_sic_clean = clean_text(parsed_sic["lugar"] + " " + parsed_sic["municipio"])
+                full_sic_clean = clean_text(
+                    parsed_sic["lugar"] + " " + parsed_sic["municipio"]
+                )
                 score_full = fuzz.ratio(full_sic_clean, c["municipio_clean"])
             else:
                 score_full = score_muni
@@ -121,7 +147,9 @@ def main():
             elif score == best_score and best_match is not None:
                 # Preferir el que tenga una longitud más cercana al municipio buscado
                 len_diff_current = abs(len(muni_clean) - len(c["municipio_clean"]))
-                len_diff_best = abs(len(muni_clean) - len(best_match["municipio_clean"]))
+                len_diff_best = abs(
+                    len(muni_clean) - len(best_match["municipio_clean"])
+                )
                 if len_diff_current < len_diff_best:
                     best_match = c
 
@@ -166,6 +194,7 @@ def main():
         print("\n⚠️ Primeros 10 casos sin match para inspección:")
         for u in unmatched[:10]:
             print(f"  - {u}")
+
 
 if __name__ == "__main__":
     main()

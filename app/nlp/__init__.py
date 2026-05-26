@@ -12,4 +12,3 @@ __all__ = [
     "parse_rndc",
     "parse_sicetac",
 ]
-

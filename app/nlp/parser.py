@@ -8,19 +8,45 @@ def clean_text(text: str) -> str:
     text = "".join(c for c in text if unicodedata.category(c) != "Mn")
     return text.lower().strip()
 
+
 # Canónical list of Colombian departments
 DPTOS_COLOMBIA = {
-    'ANTIOQUIA', 'CUNDINAMARCA', 'ATLANTICO', 'BOLIVAR', 'BOYACA',
-    'CALDAS', 'CAQUETA', 'CASANARE', 'CAUCA', 'CESAR', 'CHOCO',
-    'CORDOBA', 'HUILA', 'LA GUAJIRA', 'MAGDALENA', 'META', 'NARINO',
-    'NORTE DE SANTANDER', 'PUTUMAYO', 'QUINDIO', 'RISARALDA',
-    'SANTANDER', 'SUCRE', 'TOLIMA', 'VALLE DEL CAUCA', 'ARAUCA',
-    'AMAZONAS', 'GUAINIA', 'GUAVIARE', 'VAUPES', 'VICHADA',
-    'BOGOTA D. C.',
+    "ANTIOQUIA",
+    "CUNDINAMARCA",
+    "ATLANTICO",
+    "BOLIVAR",
+    "BOYACA",
+    "CALDAS",
+    "CAQUETA",
+    "CASANARE",
+    "CAUCA",
+    "CESAR",
+    "CHOCO",
+    "CORDOBA",
+    "HUILA",
+    "LA GUAJIRA",
+    "MAGDALENA",
+    "META",
+    "NARINO",
+    "NORTE DE SANTANDER",
+    "PUTUMAYO",
+    "QUINDIO",
+    "RISARALDA",
+    "SANTANDER",
+    "SUCRE",
+    "TOLIMA",
+    "VALLE DEL CAUCA",
+    "ARAUCA",
+    "AMAZONAS",
+    "GUAINIA",
+    "GUAVIARE",
+    "VAUPES",
+    "VICHADA",
+    "BOGOTA D. C.",
 }
 
 # Regex to match different types of dashes (normal, en-dash, em-dash) and surrounding whitespace
-DASHES = re.compile(r'\s*[-–—]\s*')  # noqa: RUF001
+DASHES = re.compile(r"\s*[-–—]\s*")  # noqa: RUF001
 
 
 def parse_sicetac(entry: str) -> dict[str, str]:
@@ -44,11 +70,7 @@ def parse_sicetac(entry: str) -> dict[str, str]:
         departamento = partes[-1]
         municipio = partes[-2]
         lugar = " - ".join(partes[:-2])
-        return {
-            "lugar": lugar,
-            "municipio": municipio,
-            "departamento": departamento
-        }
+        return {"lugar": lugar, "municipio": municipio, "departamento": departamento}
     elif len(partes) == 2:
         # e.g., 'AGUACHICA-CESAR' or 'ARBOLETES - ANTIOQUIA'
         municipio = partes[0]
@@ -56,22 +78,14 @@ def parse_sicetac(entry: str) -> dict[str, str]:
         return {
             "lugar": municipio,
             "municipio": municipio,
-            "departamento": departamento
+            "departamento": departamento,
         }
     elif len(partes) == 1:
         # e.g., 'BOGOTÁ'
         municipio = partes[0]
-        return {
-            "lugar": municipio,
-            "municipio": municipio,
-            "departamento": ""
-        }
+        return {"lugar": municipio, "municipio": municipio, "departamento": ""}
     else:
-        return {
-            "lugar": "",
-            "municipio": "",
-            "departamento": ""
-        }
+        return {"lugar": "", "municipio": "", "departamento": ""}
 
 
 def parse_rndc(entry: str) -> dict[str, str]:
@@ -87,7 +101,9 @@ def parse_rndc(entry: str) -> dict[str, str]:
 
     # Sort departments by their cleaned length descending to avoid matching substrings first
     # e.g., VALLE DEL CAUCA before CAUCA
-    sorted_dptos = sorted(DPTOS_COLOMBIA, key=lambda d: len(clean_text(d)), reverse=True)
+    sorted_dptos = sorted(
+        DPTOS_COLOMBIA, key=lambda d: len(clean_text(d)), reverse=True
+    )
 
     for dpto in sorted_dptos:
         dpto_clean = clean_text(dpto)
@@ -109,18 +125,12 @@ def parse_rndc(entry: str) -> dict[str, str]:
                 departamento = " ".join(words[-dpto_words_count:])
                 return {
                     "municipio": municipio.strip(),
-                    "departamento": departamento.strip()
+                    "departamento": departamento.strip(),
                 }
             else:
                 # If there are not enough words, fallback to simple slice
                 municipio = entry[:split_idx_clean].strip()
                 departamento = entry[split_idx_clean:].strip()
-                return {
-                    "municipio": municipio,
-                    "departamento": departamento
-                }
+                return {"municipio": municipio, "departamento": departamento}
 
-    return {
-        "municipio": entry,
-        "departamento": ""
-    }
+    return {"municipio": entry, "departamento": ""}
