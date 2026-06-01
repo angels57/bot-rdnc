@@ -1,0 +1,13 @@
+
+[server]
+port = 8501
+address = "127.0.0.1"
+headless = true
+baseUrlPath = "cotizacion"
+enableCORS = false
+enableXsrfProtection = false
+enableWebsocketCompression = false
+
+[browser]
+serverAddress = "www.impocoma.com.co"
+serverPort = 8084
