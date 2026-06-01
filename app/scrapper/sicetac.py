@@ -8,7 +8,7 @@ from app.scrapper.browser import new_rndc_page
 from app.scrapper.decorator import retry_on_timeout
 from app.scrapper.selectors import (
     SELECTOR_BT_CALCULAR,
-    SELECTOR_CAPTCHA,
+    SELECTOR_CAPTCHA_SICETAC,
     SELECTOR_CARROCERIA_VEHICULO,
     SELECTOR_CONDICION_CARGA,
     SELECTOR_CONFIG_VEHICULO,
@@ -194,14 +194,14 @@ async def playwright_sicetac(params: SicetacParams) -> str | bool:
         # =--- CAPTCHA ---
         await retryable_action(
             page,
-            SELECTOR_CAPTCHA,
+            SELECTOR_CAPTCHA_SICETAC,
             "Selector de captcha",
-            lambda: page.locator(SELECTOR_CAPTCHA).text_content(),
+            lambda: page.locator(SELECTOR_CAPTCHA_SICETAC).text_content(),
         )
         capcha_text = await safe_action(
             "Obtener texto del captcha",
-            SELECTOR_CAPTCHA,
-            lambda: page.locator(SELECTOR_CAPTCHA).text_content(),
+            SELECTOR_CAPTCHA_SICETAC,
+            lambda: page.locator(SELECTOR_CAPTCHA_SICETAC).text_content(),
         )
         sum_captcha = sum_detected(str(capcha_text))
 

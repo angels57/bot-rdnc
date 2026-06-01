@@ -4,7 +4,7 @@ from app.core.logging import get_app_logger
 from app.scrapper.browser import new_rndc_page
 from app.scrapper.selectors import (
     SELECTOR_BT_ESTADISTICAS,
-    SELECTOR_CAPTCHA,
+    SELECTOR_CAPTCHA_RNDC,
     SELECTOR_FECHA_INICIAL,
     SELECTOR_RESULTADO,
     URL,
@@ -24,8 +24,8 @@ async def playwright_rndc():
         logger.info(f"Navegando a: {URL}")
 
         # Esperar que cargue el elemento de captcha
-        await page.wait_for_selector(SELECTOR_CAPTCHA)
-        sum_text = await page.locator(SELECTOR_CAPTCHA).text_content()
+        await page.wait_for_selector(SELECTOR_CAPTCHA_RNDC, timeout=10000)
+        sum_text = await page.locator(SELECTOR_CAPTCHA_RNDC).text_content()
         sum_verify = sum_detected(str(sum_text))
         logger.info(f"Captcha resuelto: {sum_verify}")
 

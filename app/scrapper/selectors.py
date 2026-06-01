@@ -4,7 +4,7 @@
 URL = "https://rndc.mintransporte.gov.co/MenuPrincipal/tabid/204/language/es-MX/Default.aspx?returnurl=%2fProgramasRNDC%2fCrearDocumento%2ftabid%2f69%2fctl%2fMaestro%2fmid%2f396%2flanguage%2fes-MX%2fDefault.aspx"
 
 # Selector para el span que contiene el captcha (números a sumar)
-SELECTOR_CAPTCHA = "span#dnn_ctr678_VigiaPublico_Cat"
+SELECTOR_CAPTCHA_RNDC = "span#dnn_ctr678_VigiaPublico_Cat"
 
 # Selector para el input donde se ingresa el resultado del captcha
 SELECTOR_RESULTADO = "input[id='dnn_ctr678_VigiaPublico_Resultado']"
@@ -28,7 +28,7 @@ SELECTOR_DESTINO_VIAJE = "select[id='dnn_ctr417_SiceTAC_DESTINO']"
 SELECTOR_HORAS_CARGUE = "input[id='dnn_ctr417_SiceTAC_HORASCARGUE']"
 SELECTOR_HORAS_DESCARGUE = "input[id='dnn_ctr417_SiceTAC_HORASDESCARGUE']"
 
-SELECTOR_CAPTCHA = "span[id='dnn_ctr678_VigiaPublico_Cat']"
+SELECTOR_CAPTCHA_SICETAC = "span[id='dnn_ctr417_SiceTAC_Cat']"
 SELECTOR_RESULTADO_CAPTCHA = "input[id='dnn_ctr417_SiceTAC_Resultado']"
 SELECTOR_BT_CALCULAR = "a[id='dnn_ctr417_SiceTAC_btCalcular']"
 
