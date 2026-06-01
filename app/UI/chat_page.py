@@ -117,7 +117,7 @@ def render():
     with col1:
         configuracion = st.selectbox(
             "COD vehiculo",
-            [f"{c['id']} - {c['valor']}" for c in CONFIGURACIONES_VEHICULO],
+            [c['id'] for c in CONFIGURACIONES_VEHICULO],
         )
         condicion_carga = st.selectbox(
             "Condición de carga",
