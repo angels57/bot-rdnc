@@ -55,7 +55,7 @@ El resultado es un proceso automatizado de extracción, normalización y compara
 ## 🧩 Configuración en IIS
 
 1. Crear un sitio o aplicación en IIS apuntando al directorio físico del proyecto.
-2. Establecer la ruta de la aplicación a `/impocoma`.
+2. Establecer la ruta de la aplicación a `/cotizacion`.
 3. Asegurar que la carpeta `sigpa` esté presente dentro del sitio y contenga los archivos de configuración requeridos.
 4. Habilitar WebSocket Protocol en los roles de servidor.
 5. Configurar el proxy de red en el servidor o la aplicación para permitir conexiones salientes desde el proceso Python.
@@ -78,6 +78,7 @@ cd c:\Users\TEMPORAL\Documents\Automation\bot-rdnc
 uv sync
 uv run streamlit run main.py
 ```
+
 
 O directamente:
 
