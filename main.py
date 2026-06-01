@@ -22,11 +22,11 @@ def archivo_es_del_mes_actual(path: str) -> bool:
 def main():
     render()
 
-    # if date.today().day == 1 and not archivo_es_del_mes_actual(DATA_FILE):
-    #    try:
-    #        asyncio.run(playwright_rndc())
-    #    except Exception as e:
-    #        logger.error(f"Error ejecutando playwright_rndc: {e!s}")
+    if date.today().day == 1 and not archivo_es_del_mes_actual(DATA_FILE):
+        try:
+            asyncio.run(playwright_rndc())
+        except Exception as e:
+            logger.error(f"Error ejecutando playwright_rndc: {e!s}")
 
 
 if __name__ == "__main__":
