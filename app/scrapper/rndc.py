@@ -42,6 +42,9 @@ async def playwright_rndc():
         async with page.expect_download() as download_info:
             logger.info("Haciendo clic en el botón de descargar...")
             await page.locator(SELECTOR_BT_ESTADISTICAS).click()
+        await page.wait_for_timeout(
+            6000
+        )  # Esperar un momento para asegurarse de que la descarga se inicie
 
         # Guardar archivo descargado
         download = await download_info.value

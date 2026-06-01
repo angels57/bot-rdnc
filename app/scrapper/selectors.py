@@ -28,7 +28,7 @@ SELECTOR_DESTINO_VIAJE = "select[id='dnn_ctr417_SiceTAC_DESTINO']"
 SELECTOR_HORAS_CARGUE = "input[id='dnn_ctr417_SiceTAC_HORASCARGUE']"
 SELECTOR_HORAS_DESCARGUE = "input[id='dnn_ctr417_SiceTAC_HORASDESCARGUE']"
 
-SELECTOR_CAPTCHA = "span[id='dnn_ctr417_SiceTAC_Cat']"
+SELECTOR_CAPTCHA = "span[id='dnn_ctr678_VigiaPublico_Cat']"
 SELECTOR_RESULTADO_CAPTCHA = "input[id='dnn_ctr417_SiceTAC_Resultado']"
 SELECTOR_BT_CALCULAR = "a[id='dnn_ctr417_SiceTAC_btCalcular']"
 
