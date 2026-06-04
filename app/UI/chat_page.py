@@ -11,6 +11,7 @@ import streamlit as st
 from app.bot.handler import BotHandler
 from app.core import get_app_logger
 from app.data.loader import load_sicetac_ciudades
+from app.data.validation_rules import validar_fila
 from app.models.sicetac import SicetacParams
 from app.UI import components, state
 
@@ -168,23 +169,50 @@ def procesar_archivo_excel(file, bot: BotHandler) -> pl.DataFrame | None:
         return None
 
     filas_procesadas = []
-    with st.spinner("Procesando rutas desde Excel..."):
+    filas_con_error = 0
+    filas_procesadas_exitosamente = 0
+
+    with st.spinner("Validando y procesando rutas desde Excel..."):
         for row in df.iter_rows(named=True):
-            params = SicetacParams(
-                origen=str(row[columns_map["origen"]]).strip(),
-                destino=str(row[columns_map["destino"]]).strip(),
-                configuracion=str(row[columns_map["configuracion"]]).strip(),
-                condicion_carga=str(row[columns_map["condicion_carga"]]).strip(),
-                carroceria=str(row[columns_map["carroceria"]]).strip(),
-                tipo_carga=str(row[columns_map["tipo_carga"]]).strip(),
-                horas_cargue_descargue=str(
-                    row[columns_map["horas_cargue_descargue"]]
-                ).strip(),
-            )
-            costo = bot._run_scrapping(params)
+            es_valida, errores = validar_fila(row, columns_map)
+
             fila = dict(row)
-            fila["costo_sicetac"] = costo if costo else ""
+
+            if not es_valida:
+                fila["observacion"] = "; ".join(errores)
+                fila["costo_sicetac"] = ""
+                filas_con_error += 1
+            else:
+                try:
+                    params = SicetacParams(
+                        origen=str(row[columns_map["origen"]]).strip(),
+                        destino=str(row[columns_map["destino"]]).strip(),
+                        configuracion=str(row[columns_map["configuracion"]]).strip(),
+                        condicion_carga=str(
+                            row[columns_map["condicion_carga"]]
+                        ).strip(),
+                        carroceria=str(row[columns_map["carroceria"]]).strip(),
+                        tipo_carga=str(row[columns_map["tipo_carga"]]).strip(),
+                        horas_cargue_descargue=str(
+                            row[columns_map["horas_cargue_descargue"]]
+                        ).strip(),
+                    )
+                    costo = bot._run_scrapping(params)
+                    fila["costo_sicetac"] = costo if costo else ""
+                    fila["observacion"] = ""
+                    filas_procesadas_exitosamente += 1
+                except Exception as e:
+                    fila["observacion"] = f"Error al procesar: {e!s}"
+                    fila["costo_sicetac"] = ""
+                    filas_con_error += 1
+                    logger.error(f"Error procesando fila: {e!s}")
+
             filas_procesadas.append(fila)
+
+    # Mostrar resumen
+    st.info(
+        f"✅ Filas procesadas: {filas_procesadas_exitosamente} | ⚠️ Filas con errores: {filas_con_error}"
+    )
 
     return pl.from_dicts(filas_procesadas)
 
