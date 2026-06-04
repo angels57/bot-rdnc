@@ -34,7 +34,8 @@ El resultado es un proceso automatizado de extracción, normalización y compara
 5. `app/data/loader.py` carga los archivos JSON y el Excel generado.
 6. `app/data/processor.py` normaliza rutas, calcula comparativos y genera respuesta estructurada.
 7. `app/services/query_service.py` expone la lógica de consulta para UI y bot.
-8. `app/bot/formatter.py` formatea la salida en texto legible y agrega comparativos entre RNDC y Sictac.
+8. `app/services/sql_server.py` agrega una fuente opcional de SQL Server con los mismos criterios de origen, destino y configuración.
+9. `app/bot/formatter.py` formatea la salida en texto legible y agrega comparativos entre RNDC y Sictac.
 
 ## 📌 Arquitectura relevante
 
@@ -105,6 +106,10 @@ python -m streamlit run main.py
 - Actualizar `app/scrapper/selectors.py` si cambian los formularios web.
 - Validar tiempos de espera y `wait_for_selector` en los flujos de Playwright.
 - Añadir más logs en `app/core/logging.py` para diagnosticar fallos de proxy o WebSocket.
+- Configurar variables de entorno SQL Server si se desea usar la nueva fuente de datos opcional:
+  - `SQLSERVER_CONN`, o bien
+  - `DATABASE_URL`, o bien
+  - `SQLSERVER_SERVER`, `SQLSERVER_DATABASE`, `SQLSERVER_USER`, `SQLSERVER_PASSWORD`.
 - Centralizar credenciales y URLs en la carpeta `sigpa` para despliegue consistente.
 
 ## 📌 Notas finales

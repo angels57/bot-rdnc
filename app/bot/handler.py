@@ -9,7 +9,7 @@ from app.data import cargar_data, processor
 from app.models.sicetac import SicetacParams
 from app.nlp.normalizer import normalizar_sicetac_a_rndc
 from app.scrapper import playwright_sicetac
-from app.services import consultar_ruta
+from app.services import consultar_ruta, consultar_ruta_sql_server
 
 PATH_FILE = Path("data/RNDC.xlsx")
 PATH_LOOKUP = Path("data/sicetac_to_rndc.json")
@@ -113,15 +113,23 @@ class BotHandler:
 
         costo = self._run_scrapping(params)
 
+        ruta_db = consultar_ruta(
+            self.df,
+            origen=origen_df,
+            destino=destino_df,
+            configuracion=params.configuracion,
+        )
+        ruta_sql = consultar_ruta_sql_server(
+            origen=params.origen,
+            destino=params.destino,
+            configuracion=params.configuracion,
+        )
+
         return {
             "origen": params.origen,
             "destino": params.destino,
             "configuracion": params.configuracion,
             "costo_sicetac": costo,
-            "ruta_db": consultar_ruta(
-                self.df,
-                origen=origen_df,
-                destino=destino_df,
-                configuracion=params.configuracion,
-            ),
+            "ruta_db": ruta_db,
+            "ruta_sql": ruta_sql,
         }
