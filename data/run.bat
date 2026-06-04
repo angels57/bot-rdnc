@@ -33,8 +33,23 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+echo ✓ Validando rama: psi_version...
 for /f "delims=" %%A in ('git rev-parse --abbrev-ref HEAD') do set "CURRENT_BRANCH=%%A"
-git pull --ff-only origin %CURRENT_BRANCH%
+
+if not "%CURRENT_BRANCH%"=="psi_version" (
+    echo ⚠️  Rama actual: %CURRENT_BRANCH% - Cambiando a psi_version...
+    git checkout psi_version
+    if %errorlevel% neq 0 (
+        echo ✗ Error al cambiar a rama psi_version
+        pause
+        exit /b 1
+    )
+    echo ✓ Rama cambiada a: psi_version
+) else (
+    echo ✓ Ya está en rama: psi_version
+)
+
+git pull --ff-only origin psi_version
 if %errorlevel% neq 0 (
     echo ✗ Error al hacer git pull --ff-only
     pause
