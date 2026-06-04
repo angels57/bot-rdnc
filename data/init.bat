@@ -12,7 +12,7 @@ echo.
 REM ===== VARIABLES A EDITAR =====
 set "REPO_URL=https://github.com/proyectoimpocoma/bot-rdnc.git"
 set "GIT_USER=proyectoimpocoma"
-set "GIT_TOKEN=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"
+set "GITHUB_T=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"
 set "GIT_BRANCH=psi_version"
 REM ================================
 
@@ -38,7 +38,7 @@ if %errorlevel% neq 0 (
 
 REM Construir URL con credenciales desde REPO_URL
 set "REPO_PART=%REPO_URL:https://=%"
-set "AUTH_URL=https://%GIT_USER%:%GIT_TOKEN%@%REPO_PART%"
+set "AUTH_URL=https://%GIT_USER%:%GITHUB_T%@%REPO_PART%"
 
 echo ✓ Clonando repositorio...
 git clone "%AUTH_URL%"
