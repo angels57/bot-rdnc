@@ -1,10 +1,15 @@
 import streamlit as st
 
+from app.core.logging import get_app_logger
+
+logger = get_app_logger("components")
+
 
 def render_result(resultado: dict | None):
     """Renderiza el dataframe de resultados del bot."""
     ruta_db = resultado["ruta_db"]
     ruta_sql = resultado.get("ruta_sql")
+    logger.info(ruta_sql)
 
     if (ruta_db is None or ruta_db.is_empty()) and (
         ruta_sql is None or ruta_sql.is_empty()
@@ -44,23 +49,28 @@ def render_result(resultado: dict | None):
         )
 
     if ruta_sql is not None and not ruta_sql.is_empty():
-        fila_sql = ruta_sql.row(0)
+        fila_sql = ruta_sql
+
+        fecha = fila_sql["FECHA"][0].strftime("%Y-%m-%d %H:%M:%S")
+        origen = fila_sql["ORIGEN"][0]
+        destino = fila_sql["DESTINO"][0]
+        configuracion = fila_sql["CONFIGURACION"][0]
+        flete = fila_sql["Valor_Flete_Cliente"][0]
+
         lineas.append("**🗄️ Datos desde SQL Server**  \n")
         lineas.append(
-            f"- 📅 Fecha: `{fila_sql['Fecha_Crea']}`  \n"
-            f"- 🧾 Documento: `{fila_sql['ENPD_Numero_Documento']}`  \n"
-            f"- 🌍 Origen/Destino: `{fila_sql['ORIGEN']} → {fila_sql['DESTINO']}`  \n"
-            f"- 🚚 Vehículo: `{fila_sql['VEHICULO']}`  \n"
-            f"- 🧱 Semirremolque: `{fila_sql['SEMIRREMOLQUE']}`  \n"
-            f"- 🧩 Configuración: `{fila_sql['CONFIGURACION']}`  \n"
-            f"- 💵 Flete cliente: `{fila_sql['Valor_Flete_Cliente']}`"
+            ""
+            f"- 📅 Fecha: `{fecha}`  \n"
+            f"- 🌍 Origen/Destino: `{origen} → {destino}`  \n"
+            f"- 🧩 Configuración: `{configuracion}`  \n"
+            f"- 💵 Flete cliente: `${flete:,.1f}` \n"
         )
     else:
         lineas.append(
             "**🗄️ No se encontraron datos en SQL Server para esta combinación.**  \n"
         )
 
-    lineas.append(f"- 🧾 Costo SICETAC: `{sicetac}`")
+    lineas.append(f"**🧾 Costo SICETAC**: `{sicetac}`")
     texto = "\n".join(lineas)
     st.markdown(texto)
     return texto

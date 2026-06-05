@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import unicodedata
+
 from typing import Any
 from urllib.parse import parse_qs, unquote_plus, urlparse
 
@@ -10,6 +12,25 @@ from app.config.settings import settings
 from app.core import get_app_logger
 
 logger = get_app_logger("sql_server")
+
+
+def normalizar_texto(valor: str | None) -> str:
+    if not valor:
+        return ""
+
+    valor = valor.strip().upper()
+    valor = valor.replace("\r", "").replace("\n", "")
+
+    valor = "".join(
+        c
+        for c in unicodedata.normalize("NFD", valor)
+        if unicodedata.category(c) != "Mn"
+    )
+
+    if "-" in valor:
+        valor = valor.split("-", 1)[0].strip()
+
+    return valor
 
 
 def _mask_connection_string(conn_string: str) -> str:
@@ -167,14 +188,17 @@ def _get_pyodbc_connection() -> Any | None:
 
 
 def consultar_ruta_sql_server(
-    origen: str | None,
-    destino: str | None,
     configuracion: str | None,
+    destino: str | None,
+    origen: str | None,
 ) -> pl.DataFrame:
-    """Consulta la ruta directamente en SQL Server usando los mismos criterios."""
+
+    origen = normalizar_texto(origen)
+    destino = normalizar_texto(destino)
+
     if not origen or not destino or not configuracion:
         logger.warning(
-            "Faltan parámetros para consultar SQL Server: origen, destino o configuración."
+            "Faltan parámetros para consultar SQL Server: origen, destino o configuracion."
         )
         return pl.DataFrame()
 
@@ -184,15 +208,10 @@ def consultar_ruta_sql_server(
 
     query = """
         SELECT TOP(1)
-            ENPD.Fecha_Crea,
-            ENPD.ENPD_Numero_Documento,
+            ENPD.Fecha_Crea AS FECHA,
             ORIG.Nombre AS ORIGEN,
             DEST.Nombre AS DESTINO,
             ENPD.Valor_Flete_Cliente,
-            VEHI.Placa AS VEHICULO,
-            REMO.Placa AS SEMIRREMOLQUE,
-            COVE.Campo5,
-            CORE.Campo2,
             CONCAT(COVE.Campo5, CORE.Campo2) AS CONFIGURACION
         FROM Detalle_Despacho_Orden_Servicios ENPD
         INNER JOIN Rutas RUTA ON ENPD.RUTA_Codigo = RUTA.Codigo
@@ -202,45 +221,29 @@ def consultar_ruta_sql_server(
         INNER JOIN Valor_Catalogos COVE ON VEHI.CATA_TIVE_Codigo = COVE.Codigo
         LEFT JOIN Semirremolques REMO ON VEHI.SEMI_Codigo = REMO.Codigo
         LEFT JOIN Valor_Catalogos CORE ON REMO.CATA_TISE_Codigo = CORE.Codigo
-        WHERE ORIG.Nombre = ?
-          AND DEST.Nombre = ?
+        WHERE ORIG.Nombre LIKE UPPER(?)
+          AND DEST.Nombre LIKE UPPER(?)
           AND CONCAT(COVE.Campo5, CORE.Campo2) = ?
         ORDER BY ENPD.Fecha_Crea DESC;
     """
-    logger.info(
-        "Ejecutando consulta SQL Server para ruta: origen=%s, destino=%s, configuracion=%s",
-        origen,
-        destino,
-        configuracion,
-    )
-    logger.debug("Query SQL Server: %s", query.strip())
 
     try:
         cursor = connection.cursor()
-        cursor.execute(query, origen, destino, configuracion)
+        cursor.execute(query, f"%{origen}%", f"%{destino}%", configuracion)
         rows = cursor.fetchall()
-        row_count = len(rows)
-        logger.info(
-            "Consulta SQL Server ejecutada correctamente. Filas retornadas: %d",
-            row_count,
-        )
 
         if not rows:
             return pl.DataFrame()
 
         columns = [column[0] for column in cursor.description]
         data = [dict(zip(columns, row)) for row in rows]
-        result = pl.DataFrame(data)
-        logger.debug("Columnas retornadas: %s", columns)
-        logger.debug(
-            "Primera fila retornada: %s", result.row(0) if row_count > 0 else None
-        )
-        return result
+
+        return pl.DataFrame(data)
+
     except Exception as exc:
         logger.error(
-            "Error ejecutando la consulta SQL Server: %s | Query: %s | Params: %s",
+            "Error ejecutando la consulta SQL Server: %s | Params: %s",
             exc,
-            query.strip(),
             (origen, destino, configuracion),
         )
         return pl.DataFrame()
