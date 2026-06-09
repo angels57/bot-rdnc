@@ -221,13 +221,24 @@ async def playwright_sicetac(params: SicetacParams) -> str | bool:
             lambda: page.locator(SELECTOR_BT_CALCULAR).click(),
         )
 
+        # =--- COSTO POR TONELADA ---
+        costo_tonelada = await retryable_action(
+            page,
+            "input#dnn_ctr417_SiceTAC_COSTOTONELADATOTAL",
+            "Selector del botón calcular",
+            lambda: page.locator(
+                "input#dnn_ctr417_SiceTAC_COSTOTONELADATOTAL"
+            ).input_value(),
+        )
+
         # =--- OBTENER RESULTADO ---
-        value = await retryable_action(
+        costo_total = await retryable_action(
             page,
             SELECTOR_COSTO_TOTAL_VIAJE,
             "Obtener valor del costo total del viaje",
             lambda: page.locator(SELECTOR_COSTO_TOTAL_VIAJE).input_value(),
         )
+        value = costo_tonelada
 
         return value
     except Exception as e:

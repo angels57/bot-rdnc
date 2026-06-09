@@ -9,7 +9,7 @@ import polars as pl
 import streamlit as st
 
 from app.bot.handler import BotHandler
-from app.core import get_app_logger
+from app.core import get_app_logger, sicetac_cache
 from app.data.loader import load_sicetac_ciudades
 from app.data.validation_rules import validar_fila
 from app.models.sicetac import SicetacParams
@@ -148,6 +148,15 @@ def obtener_template_existente_bytes() -> tuple[bytes, bool]:
             )
 
     return generar_template_excel_bytes(), False
+
+
+def refrescar_cache() -> None:
+    try:
+        sicetac_cache.clear()
+        st.success("Caché de rutas SICETAC refrescado correctamente.")
+    except Exception as e:
+        st.error(f"No se pudo refrescar el caché: {e!s}")
+        logger.error(f"Error al refrescar caché: {e!s}")
 
 
 def procesar_archivo_excel(file, bot: BotHandler) -> pl.DataFrame | None:
@@ -290,6 +299,9 @@ def render():
 
     state.init_state()
 
+    if "loading" not in st.session_state:
+        st.session_state.loading = False
+
     origenes, _ = load_sicetac_ciudades()
 
     with st.expander("❓ Instrucciones de uso"):
@@ -318,6 +330,11 @@ def render():
         data=template_bytes,
         file_name=file_name,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    st.button(
+        "Refrescar caché SICETAC",
+        on_click=refrescar_cache,
+        disabled=st.session_state.loading,
     )
     st.caption(
         "Usa el archivo existente data/Format_sicetac_automatizacion.xlsx si ya está guardado, o descarga la plantilla generada."
@@ -402,9 +419,6 @@ def render():
             ],
             key="tipo_carga",
         )
-
-    if "loading" not in st.session_state:
-        st.session_state.loading = False
 
     # Botón fuera del handler: se deshabilita cuando `loading` es True
     st.button(
