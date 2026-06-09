@@ -55,7 +55,7 @@ def render_result(resultado: dict | None):
         origen = fila_sql["ORIGEN"][0]
         destino = fila_sql["DESTINO"][0]
         configuracion = fila_sql["CONFIGURACION"][0]
-        flete = fila_sql["Valor_Flete_Cliente"][0]
+        flete_transportador = fila_sql["Valor_Flete_Transportador"][0]
 
         lineas.append("**🗄️ Datos desde SQL Server**  \n")
         lineas.append(
@@ -63,7 +63,7 @@ def render_result(resultado: dict | None):
             f"- 📅 Fecha: `{fecha}`  \n"
             f"- 🌍 Origen/Destino: `{origen} → {destino}`  \n"
             f"- 🧩 Configuración: `{configuracion}`  \n"
-            f"- 💵 Flete cliente: `${flete:,.1f}` \n"
+            f"- 💵 Flete transportador: `${flete_transportador:,.1f}` \n"
         )
     else:
         lineas.append(

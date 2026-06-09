@@ -211,7 +211,8 @@ def consultar_ruta_sql_server(
             ENPD.Fecha_Crea AS FECHA,
             ORIG.Nombre AS ORIGEN,
             DEST.Nombre AS DESTINO,
-            ENPD.Valor_Flete_Cliente,
+            ENPD.Valor_Flete_Transportador,
+            ENDP.Valor_Flete_Cliente,
             CONCAT(COVE.Campo5, CORE.Campo2) AS CONFIGURACION
         FROM Detalle_Despacho_Orden_Servicios ENPD
         INNER JOIN Rutas RUTA ON ENPD.RUTA_Codigo = RUTA.Codigo
