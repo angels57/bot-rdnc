@@ -21,6 +21,8 @@ def render_result(resultado: dict | None):
         if resultado["costo_sicetac"]:
             sicetac = f"- 🧾 Costo SICETAC: `{resultado['costo_sicetac']}`"
             msg += sicetac
+            if resultado.get("costo_tonelada"):
+                msg += f"\n- 💰 Costo por tonelada: `{resultado['costo_tonelada']}`"
         else:
             msg += "No se pudo obtener el costo de SICETAC para esta ruta."
 
@@ -57,7 +59,7 @@ def render_result(resultado: dict | None):
         configuracion = fila_sql["CONFIGURACION"][0]
         flete_transportador = fila_sql["Valor_Flete_Transportador"][0]
 
-        lineas.append("**🗄️ Datos desde SQL Server**  \n")
+        lineas.append("**🗄️ Datos desde TMS**  \n")
         lineas.append(
             ""
             f"- 📅 Fecha: `{fecha}`  \n"
@@ -71,6 +73,8 @@ def render_result(resultado: dict | None):
         )
 
     lineas.append(f"**🧾 Costo SICETAC**: `{sicetac}`")
+    if resultado.get("costo_tonelada"):
+        lineas.append(f"**💰 Costo por tonelada**: `{resultado['costo_tonelada']}`")
     texto = "\n".join(lineas)
     st.markdown(texto)
     return texto

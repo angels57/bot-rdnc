@@ -12,6 +12,7 @@ from app.scrapper.selectors import (
     SELECTOR_CARROCERIA_VEHICULO,
     SELECTOR_CONDICION_CARGA,
     SELECTOR_CONFIG_VEHICULO,
+    SELECTOR_COSTO_TONELADA,
     SELECTOR_COSTO_TOTAL_VIAJE,
     SELECTOR_DESTINO_VIAJE,
     SELECTOR_HORAS_CARGUE,
@@ -98,7 +99,7 @@ async def retryable_action(page, selector: str, name: str, action, retries=2, de
                 raise last_error
 
 
-async def playwright_sicetac(params: SicetacParams) -> str | bool:
+async def playwright_sicetac(params: SicetacParams) -> dict | bool:
     """Función placeholder para el scrapper de SICETAC."""
     logger.info("playwright_sicetac aún no implementado.")
 
@@ -222,14 +223,21 @@ async def playwright_sicetac(params: SicetacParams) -> str | bool:
         )
 
         # =--- OBTENER RESULTADO ---
-        value = await retryable_action(
+        costo_total = await retryable_action(
             page,
             SELECTOR_COSTO_TOTAL_VIAJE,
             "Obtener valor del costo total del viaje",
             lambda: page.locator(SELECTOR_COSTO_TOTAL_VIAJE).input_value(),
         )
 
-        return value
+        costo_tonelada = await retryable_action(
+            page,
+            SELECTOR_COSTO_TONELADA,
+            "Obtener valor del costo por tonelada",
+            lambda: page.locator(SELECTOR_COSTO_TONELADA).input_value(),
+        )
+
+        return {"costo_total": costo_total, "costo_tonelada": costo_tonelada}
     except Exception as e:
         logger.error(f"Error en playwright_sicetac: {e!s}")
         return False

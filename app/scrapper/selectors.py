@@ -33,3 +33,4 @@ SELECTOR_RESULTADO_CAPTCHA = "input[id='dnn_ctr417_SiceTAC_Resultado']"
 SELECTOR_BT_CALCULAR = "a[id='dnn_ctr417_SiceTAC_btCalcular']"
 
 SELECTOR_COSTO_TOTAL_VIAJE = "input[id='dnn_ctr417_SiceTAC_COSTOTOTALVIAJE']"
+SELECTOR_COSTO_TONELADA = "input[id='dnn_ctr417_SiceTAC_COSTOTONELADATOTAL']"

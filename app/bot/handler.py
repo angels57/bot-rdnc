@@ -64,6 +64,8 @@ class BotHandler:
         try:
             cached_val = sicetac_cache.get(cache_key)
             if cached_val:
+                if isinstance(cached_val, str):
+                    cached_val = {"costo_total": cached_val, "costo_tonelada": ""}
                 logger.info(
                     f"Caché HIT para ruta: {params.origen} -> {params.destino} | Valor recuperado: {cached_val}"
                 )
@@ -112,6 +114,13 @@ class BotHandler:
             )
 
         costo = self._run_scrapping(params)
+        costo_sicetac = ""
+        costo_tonelada = ""
+        if isinstance(costo, dict):
+            costo_sicetac = costo.get("costo_total", "")
+            costo_tonelada = costo.get("costo_tonelada", "")
+        elif costo:
+            costo_sicetac = costo
 
         ruta_db = consultar_ruta(
             self.df,
@@ -129,7 +138,8 @@ class BotHandler:
             "origen": params.origen,
             "destino": params.destino,
             "configuracion": params.configuracion,
-            "costo_sicetac": costo,
+            "costo_sicetac": costo_sicetac,
+            "costo_tonelada": costo_tonelada,
             "ruta_db": ruta_db,
             "ruta_sql": ruta_sql,
         }
