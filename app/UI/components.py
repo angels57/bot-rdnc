@@ -6,75 +6,85 @@ logger = get_app_logger("components")
 
 
 def render_result(resultado: dict | None):
-    """Renderiza el dataframe de resultados del bot."""
+    """Renderiza el dataframe de resultados del bot con tarjetas visuales."""
     ruta_db = resultado["ruta_db"]
     ruta_sql = resultado.get("ruta_sql")
     logger.info(ruta_sql)
 
+    # Encabezado
+    st.markdown(
+        f"### 🚛 Resultados para {resultado['origen']} - {resultado['destino']}"
+    )
+
+    # Caso sin datos en ninguna fuente
     if (ruta_db is None or ruta_db.is_empty()) and (
         ruta_sql is None or ruta_sql.is_empty()
     ):
-        msg = (
-            "No encontre resultados exactos para esa ruta en RDNC ni en SQL Server. "
-            "Probablemente no haya datos suficientes para esa combinación de origen, destino y configuración de vehículo. "
-        )
-        if resultado["costo_sicetac"]:
-            sicetac = f"- 🧾 Costo SICETAC: `{resultado['costo_sicetac']}`"
-            msg += sicetac
-            if resultado.get("costo_tonelada"):
-                msg += f"\n- 💰 Costo por tonelada: `{resultado['costo_tonelada']}`"
+        with st.container(border=True):
+            col_icon, col_msg = st.columns([1, 5])
+            with col_icon:
+                st.markdown("# ⚠️")
+            with col_msg:
+                st.markdown("#### No se encontraron resultados")
+                st.markdown(
+                    "No hay datos en **RDNC** ni en **TMS** para esta combinación "
+                    "de origen, destino y configuración de vehículo."
+                )
+                if resultado["costo_sicetac"]:
+                    st.metric(
+                        "🧾 Costo SICETAC disponible",
+                        f"${resultado['costo_sicetac']}",
+                    )
+                    if resultado.get("costo_tonelada"):
+                        st.metric(
+                            "💰 Costo por ton   elada",
+                            f"${resultado['costo_tonelada']}",
+                        )
+                else:
+                    st.warning("No se pudo obtener costo SICETAC para esta ruta.")
+        return None
+
+    # Dos columnas: RDNC | TMS
+    col_db, col_sql = st.columns(2)
+
+    with col_db, st.container(border=True):
+        st.markdown("#### 📊 RDNC local")
+        if ruta_db is not None and not ruta_db.is_empty():
+            tipo_vehiculo = ruta_db["COD_CONFIG_VEHICULO"][0]
+            total_viajes = ruta_db["VIAJESTOTALES"].sum()
+            costo_promedio_unitario = ruta_db["VALOR_PROMEDIO_UNITARIO"].mean()
+
+            st.markdown(f"🚚 **{tipo_vehiculo}**")
+            st.metric("Viajes totales", f"{total_viajes:,.0f}")
+            st.metric("Flete promedio", f"${costo_promedio_unitario:,.0f}")
         else:
-            msg += "No se pudo obtener el costo de SICETAC para esta ruta."
+            st.markdown("⛔ **Sin datos**")
+            st.caption("No hay registros para esta combinación en RDNC.")
 
-        st.markdown(msg)
-        return None, msg
+    with col_sql, st.container(border=True):
+        st.markdown("#### 🗄️ TMS (SQL Server)")
+        if ruta_sql is not None and not ruta_sql.is_empty():
+            fila_sql = ruta_sql
+            fecha = fila_sql["FECHA"][0].strftime("%Y-%m-%d %H:%M:%S")
+            configuracion = fila_sql["CONFIGURACION"][0]
+            flete_transportador = fila_sql["Valor_Flete_Transportador"][0]
 
-    sicetac = resultado["costo_sicetac"]
-    lineas = [
-        f"### 🚛 Resultados para {resultado['origen']} - {resultado['destino']}\n"
-    ]
+            st.metric("Flete transportador", f"${flete_transportador:,.1f}")
+            st.caption(f"Fecha: {fecha} | Config: {configuracion}")
+        else:
+            st.markdown("⛔ **Sin datos**")
+            st.caption("No hay registros para esta combinación en TMS.")
 
-    if ruta_db is not None and not ruta_db.is_empty():
-        tipo_vehiculo = ruta_db["COD_CONFIG_VEHICULO"][0]
-        total_viajes = ruta_db["VIAJESTOTALES"].sum()
-        costo_promedio_unitario = ruta_db["VALOR_PROMEDIO_UNITARIO"].mean()
+    # SICETAC — tarjeta inferior
+    with st.container(border=True):
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            if resultado["costo_sicetac"]:
+                st.metric("🧾 Costo SICETAC (total)", f"${resultado['costo_sicetac']}")
+            else:
+                st.warning("No se pudo obtener costo SICETAC")
+        with col_c2:
+            if resultado.get("costo_tonelada"):
+                st.metric("💰 Costo por tonelada", f"${resultado['costo_tonelada']}")
 
-        lineas.append(
-            f"**📊 Datos desde RDNC local**  \n"
-            f"- 🚚 Vehículo: `{tipo_vehiculo}`  \n"
-            f"- 📦 Viajes totales: `{total_viajes:,.0f}`  \n"
-            f"- 💰 Flete promedio: `${costo_promedio_unitario:,.0f}`  \n"
-        )
-    else:
-        lineas.append(
-            "**📊 No se encontraron datos en RDNC local para esta combinación.**  \n"
-        )
-
-    if ruta_sql is not None and not ruta_sql.is_empty():
-        fila_sql = ruta_sql
-
-        fecha = fila_sql["FECHA"][0].strftime("%Y-%m-%d %H:%M:%S")
-        origen = fila_sql["ORIGEN"][0]
-        destino = fila_sql["DESTINO"][0]
-        configuracion = fila_sql["CONFIGURACION"][0]
-        flete_transportador = fila_sql["Valor_Flete_Transportador"][0]
-
-        lineas.append("**🗄️ Datos desde TMS**  \n")
-        lineas.append(
-            ""
-            f"- 📅 Fecha: `{fecha}`  \n"
-            f"- 🌍 Origen/Destino: `{origen} → {destino}`  \n"
-            f"- 🧩 Configuración: `{configuracion}`  \n"
-            f"- 💵 Flete transportador: `${flete_transportador:,.1f}` \n"
-        )
-    else:
-        lineas.append(
-            "**🗄️ No se encontraron datos en SQL Server para esta combinación.**  \n"
-        )
-
-    lineas.append(f"**🧾 Costo SICETAC**: `{sicetac}`")
-    if resultado.get("costo_tonelada"):
-        lineas.append(f"**💰 Costo por tonelada**: `{resultado['costo_tonelada']}`")
-    texto = "\n".join(lineas)
-    st.markdown(texto)
-    return texto
+    return None

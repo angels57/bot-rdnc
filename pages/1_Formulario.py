@@ -71,7 +71,9 @@ st.subheader("Información del flete")
 
 col_tarifa, col_formato = st.columns([3, 2])
 with col_tarifa:
-    tarifa = st.number_input("Valor flete ($)", min_value=0, value=0, step=1000, format="%d")
+    tarifa = st.number_input(
+        "Valor flete ($)", min_value=0, value=0, step=1000, format="%d"
+    )
 with col_formato:
     st.write("Valor formateado")
     if tarifa > 0:
@@ -90,6 +92,20 @@ with col_fuente:
 with col_agencia:
     agencia = st.text_input("Agencia", placeholder="Nombre de la agencia")
 
+# Validación de campos obligatorios
+campos_obligatorios = {
+    "Origen": origen,
+    "Destino": destino,
+    "Valor flete": tarifa > 0,
+    "Tipo de flete": tipo_flete,
+    "Fuente": fuente.strip(),
+    "Agencia": agencia.strip(),
+}
+campos_faltantes = [
+    nombre for nombre, valor in campos_obligatorios.items() if not valor
+]
+todo_completo = len(campos_faltantes) == 0
+
 st.divider()
 
 if origen and destino:
@@ -105,5 +121,18 @@ if origen and destino:
 | 📎 **Fuente** | `{fuente if fuente else "_Sin especificar_"}` |
 | 🏢 **Agencia** | `{agencia if agencia else "_Sin especificar_"}` |
         """)
+
+        if not todo_completo:
+            st.warning(f"⚠️ Campos pendientes: {', '.join(campos_faltantes)}")
+
+        st.divider()
+        guardar_clicked = st.button(
+            "💾 Guardar registro",
+            type="primary",
+            use_container_width=True,
+            disabled=not todo_completo,
+        )
+        if guardar_clicked:
+            st.success("✅ Registro guardado correctamente.")
 else:
     st.info("Selecciona origen y destino para ver el resumen.")

@@ -446,5 +446,20 @@ def render():
         ),
         disabled=st.session_state.loading,
     )
-    if "resultado" in st.session_state and st.session_state.resultado:
+    if "resultado" not in st.session_state:
+        with st.container(border=True):
+            col_icon, col_msg = st.columns([1, 5])
+            with col_icon:
+                st.markdown("# 👋")
+            with col_msg:
+                st.markdown("### Completa los parámetros y consulta una ruta")
+                st.markdown(
+                    "Selecciona origen, destino, configuración del vehículo y demás parámetros, "
+                    "luego haz clic en **Consultar ruta** para obtener la cotización.\n\n"
+                    "Los resultados incluirán:\n"
+                    "- 📊 Datos históricos desde **RDNC**\n"
+                    "- 🗄️ Datos desde **TMS** (SQL Server)\n"
+                    "- 🧾 Costo estimado desde **SICETAC**"
+                )
+    elif st.session_state.resultado:
         components.render_result(st.session_state.resultado)
