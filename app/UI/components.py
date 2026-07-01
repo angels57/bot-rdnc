@@ -87,4 +87,27 @@ def render_result(resultado: dict | None):
             if resultado.get("costo_tonelada"):
                 st.metric("💰 Costo por tonelada", f"${resultado['costo_tonelada']}")
 
+    # Registros previos — tarjeta de fletes registrados
+    fletes_registrados = resultado.get("fletes_registrados", [])
+    if fletes_registrados:
+        with st.container(border=True):
+            st.markdown("#### 📝 Registros previos")
+            for registro in fletes_registrados[:5]:
+                col_f1, col_f2 = st.columns([3, 2])
+                with col_f1:
+                    tarifa = registro.get("tarifa", 0)
+                    tipo_flete = registro.get("tipo_flete", "N/A")
+                    st.write(f"**${tarifa:,.0f}** ({tipo_flete})")
+                with col_f2:
+                    fuente = registro.get("fuente", "N/A")
+                    agencia = registro.get("agencia", "N/A")
+                    creado = registro.get("creado_en", "")
+                    fecha_corta = creado[:10] if creado else ""
+                    st.caption(f"{fuente} · {agencia} · {fecha_corta}")
+    else:
+        with st.container(border=True):
+            st.markdown("#### 📝 Registros previos")
+            st.markdown("⛔ **Sin registros**")
+            st.caption("No hay fletes registrados para esta combinación.")
+
     return None
