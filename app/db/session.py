@@ -11,7 +11,9 @@ if not db_url:
     logger.error("DATABASE_URL_REGISTER no está configurada en .env")
     raise ValueError("DATABASE_URL_REGISTER no está configurada en .env")
 
-logger.info(f"Conectando a base de datos de registros: {db_url.split('@')[-1] if '@' in db_url else db_url}")
+logger.info(
+    f"Conectando a base de datos de registros: {db_url.split('@')[-1] if '@' in db_url else db_url}"
+)
 
 engine = create_engine(db_url)
 SessionLocal = sessionmaker(bind=engine)

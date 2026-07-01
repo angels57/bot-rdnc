@@ -94,7 +94,40 @@ col_fuente, col_agencia = st.columns(2)
 with col_fuente:
     fuente = st.text_input("Fuente", placeholder="Cliente, Conductor o otros")
 with col_agencia:
-    agencia = st.text_input("Agencia", placeholder="Nombre de la agencia")
+    agencia = st.selectbox(
+        "Agencia",
+        [
+            "TODOS",
+            "BARRANQUILLA",
+            "BOGOTA",
+            "BUENAVENTURA",
+            "CALI",
+            "CARTAGENA",
+            "CARTAGENA ITR",
+            "CARTAGENA MADROÑO",
+            "CUCUTA",
+            "DUITAMA",
+            "FUNZA",
+            "FUNZA ITALCOL",
+            "GIRON",
+            "GUACARI",
+            "LEBRIJA",
+            "MEDELLIN",
+            "OFICINA VIRTUAL",
+            "PALERMO",
+            "PALMIRA",
+            "PEREIRA SM",
+            "PTO LIBERTADOR",
+            "PUERTO ANTIOQUIA",
+            "RIVERPORT",
+            "SAMACA",
+            "SANTA MARTA",
+            "TOCANCIPA",
+            "UBATE",
+            "VILLAVICENCIO",
+            "YOPAL",
+        ],
+    )
 
 # Validación de campos obligatorios
 campos_obligatorios = {
