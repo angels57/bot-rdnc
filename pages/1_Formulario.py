@@ -5,8 +5,12 @@ from pathlib import Path
 
 import streamlit as st
 
+from app.db.crud import guardar_flete, init_db
+
 st.set_page_config(page_title="Registro de flete", page_icon="📝")
 st.title("Registro de precio de flete")
+
+init_db()
 
 CONFIGURACIONES_VEHICULO = [
     {"id": "3S3", "valor": "Tractocamión tres ejes con semiremolque de tres ejes"},
@@ -83,12 +87,12 @@ with col_formato:
 
 tipo_flete = st.selectbox(
     "Tipo de flete",
-    ["", "Fijo", "Variable", "Por viaje", "Por tonelada", "Por km"],
+    ["Por viaje", "Por tonelada"],
 )
 
 col_fuente, col_agencia = st.columns(2)
 with col_fuente:
-    fuente = st.text_input("Fuente", placeholder="Ej: SICETAC, RNDC, Cliente...")
+    fuente = st.text_input("Fuente", placeholder="Cliente, Conductor o otros")
 with col_agencia:
     agencia = st.text_input("Agencia", placeholder="Nombre de la agencia")
 
@@ -97,7 +101,6 @@ campos_obligatorios = {
     "Origen": origen,
     "Destino": destino,
     "Valor flete": tarifa > 0,
-    "Tipo de flete": tipo_flete,
     "Fuente": fuente.strip(),
     "Agencia": agencia.strip(),
 }
@@ -133,6 +136,16 @@ if origen and destino:
             disabled=not todo_completo,
         )
         if guardar_clicked:
-            st.success("✅ Registro guardado correctamente.")
+            with st.spinner("Guardando registro..."):
+                guardar_flete(
+                    cod_vehiculo=cod_vehiculo,
+                    origen=origen,
+                    destino=destino,
+                    tarifa=tarifa,
+                    tipo_flete=tipo_flete,
+                    fuente=fuente,
+                    agencia=agencia,
+                )
+                st.success("✅ Registro guardado correctamente en la base de datos.")
 else:
     st.info("Selecciona origen y destino para ver el resumen.")
