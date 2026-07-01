@@ -190,6 +190,7 @@ def procesar_archivo_excel(file, bot: BotHandler) -> pl.DataFrame | None:
             if not es_valida:
                 fila["observacion"] = "; ".join(errores)
                 fila["costo_sicetac"] = ""
+                fila["costo_tonelada"] = ""
                 filas_con_error += 1
             else:
                 try:
@@ -207,12 +208,21 @@ def procesar_archivo_excel(file, bot: BotHandler) -> pl.DataFrame | None:
                         ).strip(),
                     )
                     costo = bot._run_scrapping(params)
-                    fila["costo_sicetac"] = costo if costo else ""
+                    if isinstance(costo, dict):
+                        fila["costo_sicetac"] = costo.get("costo_total", "")
+                        fila["costo_tonelada"] = costo.get("costo_tonelada", "")
+                    elif costo:
+                        fila["costo_sicetac"] = costo
+                        fila["costo_tonelada"] = ""
+                    else:
+                        fila["costo_sicetac"] = ""
+                        fila["costo_tonelada"] = ""
                     fila["observacion"] = ""
                     filas_procesadas_exitosamente += 1
                 except Exception as e:
                     fila["observacion"] = f"Error al procesar: {e!s}"
                     fila["costo_sicetac"] = ""
+                    fila["costo_tonelada"] = ""
                     filas_con_error += 1
                     logger.error(f"Error procesando fila: {e!s}")
 
@@ -314,44 +324,8 @@ def render():
             5. Indica el **tipo de carga** (General o Granel Sólido).
             6. Especifica las **horas de cargue/descargue**.
             7. Haz clic en "Consultar ruta" para obtener la cotización.
-            8. Si prefieres usar un Excel, sube el archivo con las columnas requeridas y selecciona "Procesar archivo Excel".
+            8. En el panel lateral puedes cargar un archivo Excel para procesar múltiples rutas.
             """
-        )
-
-    template_bytes, existe_template = obtener_template_existente_bytes()
-    file_name = (
-        "Format_sicetac_automatizacion.xlsx"
-        if existe_template
-        else "template_sicetac.xlsx"
-    )
-
-    st.download_button(
-        "Descargar plantilla Excel",
-        data=template_bytes,
-        file_name=file_name,
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
-    st.button(
-        "Refrescar caché SICETAC",
-        on_click=refrescar_cache,
-        disabled=st.session_state.loading,
-    )
-    st.caption(
-        "Usa el archivo existente data/Format_sicetac_automatizacion.xlsx si ya está guardado, o descarga la plantilla generada."
-    )
-
-    excel_file = st.file_uploader(
-        "Sube un archivo Excel con las rutas a procesar",
-        type=["xlsx", "xls"],
-        key="excel_file",
-    )
-
-    if excel_file:
-        st.button(
-            "Procesar archivo Excel",
-            on_click=procesar_excel,
-            args=(excel_file,),
-            disabled=st.session_state.loading,
         )
 
     if "excel_result" in st.session_state and st.session_state.excel_result is not None:
@@ -364,6 +338,43 @@ def render():
             file_name="resultado_sicetac.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
+
+    with st.sidebar:
+        st.header("Carga masiva Excel")
+
+        template_bytes, existe_template = obtener_template_existente_bytes()
+        file_name = (
+            "Format_sicetac_automatizacion.xlsx"
+            if existe_template
+            else "template_sicetac.xlsx"
+        )
+
+        st.download_button(
+            "Descargar plantilla Excel",
+            data=template_bytes,
+            file_name=file_name,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        st.button(
+            "Refrescar caché SICETAC",
+            on_click=refrescar_cache,
+            disabled=st.session_state.loading,
+        )
+        st.caption("Descarga la plantilla, completa los datos, súbela y procesa.")
+
+        excel_file = st.file_uploader(
+            "Sube un archivo Excel con las rutas a procesar",
+            type=["xlsx", "xls"],
+            key="excel_file",
+        )
+
+        if excel_file:
+            st.button(
+                "Procesar archivo Excel",
+                on_click=procesar_excel,
+                args=(excel_file,),
+                disabled=st.session_state.loading,
+            )
 
     col1, col2, col3 = st.columns([3, 5, 5])
     with col1:
@@ -435,5 +446,20 @@ def render():
         ),
         disabled=st.session_state.loading,
     )
-    if "resultado" in st.session_state and st.session_state.resultado:
+    if "resultado" not in st.session_state:
+        with st.container(border=True):
+            col_icon, col_msg = st.columns([1, 5])
+            with col_icon:
+                st.markdown("# 👋")
+            with col_msg:
+                st.markdown("### Completa los parámetros y consulta una ruta")
+                st.markdown(
+                    "Selecciona origen, destino, configuración del vehículo y demás parámetros, "
+                    "luego haz clic en **Consultar ruta** para obtener la cotización.\n\n"
+                    "Los resultados incluirán:\n"
+                    "- 📊 Datos históricos desde **RDNC**\n"
+                    "- 🗄️ Datos desde **TMS** (SQL Server)\n"
+                    "- 🧾 Costo estimado desde **SICETAC**"
+                )
+    elif st.session_state.resultado:
         components.render_result(st.session_state.resultado)

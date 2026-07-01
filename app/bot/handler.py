@@ -9,7 +9,11 @@ from app.data import cargar_data, processor
 from app.models.sicetac import SicetacParams
 from app.nlp.normalizer import normalizar_sicetac_a_rndc
 from app.scrapper import playwright_sicetac
-from app.services import consultar_ruta
+from app.services import (
+    consultar_fletes_registrados,
+    consultar_ruta,
+    consultar_ruta_sql_server,
+)
 
 PATH_FILE = Path("data/RNDC.xlsx")
 PATH_LOOKUP = Path("data/sicetac_to_rndc.json")
@@ -64,6 +68,8 @@ class BotHandler:
         try:
             cached_val = sicetac_cache.get(cache_key)
             if cached_val:
+                if isinstance(cached_val, str):
+                    cached_val = {"costo_total": cached_val, "costo_tonelada": ""}
                 logger.info(
                     f"Caché HIT para ruta: {params.origen} -> {params.destino} | Valor recuperado: {cached_val}"
                 )
@@ -112,16 +118,89 @@ class BotHandler:
             )
 
         costo = self._run_scrapping(params)
+        costo_sicetac = ""
+        costo_tonelada = ""
+        if isinstance(costo, dict):
+            costo_sicetac = costo.get("costo_total", "")
+            costo_tonelada = costo.get("costo_tonelada", "")
+        elif costo:
+            costo_sicetac = costo
+
+        if costo_sicetac:
+            logger.info(
+                f"✅ Se obtuvo costo SICETAC para ruta {params.origen} → {params.destino}: "
+                f"total=${costo_sicetac}, tonelada=${costo_tonelada or 'N/A'}"
+            )
+        else:
+            logger.warning(
+                f"❌ No se obtuvo costo SICETAC para ruta {params.origen} → {params.destino}"
+            )
+
+        ruta_db = consultar_ruta(
+            self.df,
+            origen=origen_df,
+            destino=destino_df,
+            configuracion=params.configuracion,
+        )
+
+        if ruta_db is not None and not ruta_db.is_empty():
+            logger.info(
+                f"✅ Se obtuvieron {len(ruta_db)} registros RDNC para ruta "
+                f"{params.origen} → {params.destino} (config: {params.configuracion})"
+            )
+        else:
+            logger.warning(
+                f"❌ No se encontraron datos RDNC para ruta {params.origen} → {params.destino}"
+            )
+
+        ruta_sql = consultar_ruta_sql_server(
+            origen=params.origen,
+            destino=params.destino,
+            configuracion=params.configuracion,
+        )
+
+        if ruta_sql is not None and not ruta_sql.is_empty():
+            flete_tms = ruta_sql["Valor_Flete_Transportador"][0]
+            logger.info(
+                f"✅ Se obtuvo dato TMS para ruta {params.origen} → {params.destino}: "
+                f"${flete_tms:,.1f}"
+            )
+        else:
+            logger.warning(
+                f"❌ No se encontraron datos TMS para ruta {params.origen} → {params.destino}"
+            )
+
+        fletes_registrados = consultar_fletes_registrados(
+            origen=params.origen,
+            destino=params.destino,
+            configuracion=params.configuracion,
+        )
+
+        if fletes_registrados:
+            logger.info(
+                f"✅ Se encontraron {len(fletes_registrados)} registros previos para ruta "
+                f"{params.origen} → {params.destino}"
+            )
+        else:
+            logger.info(
+                f"[INFO] No se encontraron fletes registrados para ruta {params.origen} → {params.destino}"
+            )
+
+        logger.info(
+            f"📊 Resumen consulta {params.origen} → {params.destino}: "
+            f"RDNC={'✅' if ruta_db is not None and not ruta_db.is_empty() else '❌'}, "
+            f"TMS={'✅' if ruta_sql is not None and not ruta_sql.is_empty() else '❌'}, "
+            f"SICETAC={'✅' if costo_sicetac else '❌'}, "
+            f"Fletes={'✅' if fletes_registrados else '[INFO]'} ({len(fletes_registrados)})"
+        )
 
         return {
             "origen": params.origen,
             "destino": params.destino,
             "configuracion": params.configuracion,
-            "costo_sicetac": costo,
-            "ruta_db": consultar_ruta(
-                self.df,
-                origen=origen_df,
-                destino=destino_df,
-                configuracion=params.configuracion,
-            ),
+            "costo_sicetac": costo_sicetac,
+            "costo_tonelada": costo_tonelada,
+            "ruta_db": ruta_db,
+            "ruta_sql": ruta_sql,
+            "fletes_registrados": fletes_registrados,
         }

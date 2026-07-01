@@ -12,6 +12,7 @@ from app.scrapper.selectors import (
     SELECTOR_CARROCERIA_VEHICULO,
     SELECTOR_CONDICION_CARGA,
     SELECTOR_CONFIG_VEHICULO,
+    SELECTOR_COSTO_TONELADA,
     SELECTOR_COSTO_TOTAL_VIAJE,
     SELECTOR_DESTINO_VIAJE,
     SELECTOR_HORAS_CARGUE,
@@ -98,7 +99,7 @@ async def retryable_action(page, selector: str, name: str, action, retries=2, de
                 raise last_error
 
 
-async def playwright_sicetac(params: SicetacParams) -> str | bool:
+async def playwright_sicetac(params: SicetacParams) -> dict | bool:
     """Función placeholder para el scrapper de SICETAC."""
     logger.info("playwright_sicetac aún no implementado.")
 
@@ -221,15 +222,7 @@ async def playwright_sicetac(params: SicetacParams) -> str | bool:
             lambda: page.locator(SELECTOR_BT_CALCULAR).click(),
         )
 
-        # =--- COSTO POR TONELADA ---
-        costo_tonelada = await retryable_action(
-            page,
-            "input#dnn_ctr417_SiceTAC_COSTOTONELADATOTAL",
-            "Selector del botón calcular",
-            lambda: page.locator(
-                "input#dnn_ctr417_SiceTAC_COSTOTONELADATOTAL"
-            ).input_value(),
-        )
+        await page.wait_for_timeout(2000)
 
         # =--- OBTENER RESULTADO ---
         costo_total = await retryable_action(
@@ -245,7 +238,18 @@ async def playwright_sicetac(params: SicetacParams) -> str | bool:
             )
             return False
 
-        return value
+        costo_tonelada = await retryable_action(
+            page,
+            SELECTOR_COSTO_TONELADA,
+            "Obtener valor del costo por tonelada",
+            lambda: page.locator(SELECTOR_COSTO_TONELADA).input_value(),
+        )
+
+        # Limpiar formato monetario que SICETAC incluye
+        costo_total = costo_total.replace("$", "").replace(",", "").strip() if costo_total else ""
+        costo_tonelada = costo_tonelada.replace("$", "").replace(",", "").strip() if costo_tonelada else ""
+
+        return {"costo_total": costo_total, "costo_tonelada": costo_tonelada}
     except Exception as e:
         logger.error(f"Error en playwright_sicetac: {e!s}")
         return False

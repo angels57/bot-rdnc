@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     log_file: str = "logs/app.json"
     sentry_dsn: str = ""
     environment: str = "development"
+    DATABASE_URL: str = ""
+    DATABASE_URL_REGISTER: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",
