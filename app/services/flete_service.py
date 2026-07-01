@@ -22,6 +22,11 @@ def consultar_fletes_registrados(
     Returns:
         Lista de diccionarios con los registros encontrados
     """
+    logger.info(
+        f"Consultando fletes registrados para: origen='{origen}', "
+        f"destino='{destino}', config='{configuracion}'"
+    )
+
     try:
         with SessionLocal() as session:
             query = session.query(FleteRegistro).filter(
@@ -33,6 +38,16 @@ def consultar_fletes_registrados(
                 query = query.filter(FleteRegistro.cod_vehiculo == configuracion)
 
             registros = query.order_by(FleteRegistro.creado_en.desc()).limit(10).all()
+
+            if registros:
+                logger.info(
+                    f"Se encontraron {len(registros)} registros de flete previos"
+                )
+            else:
+                logger.info(
+                    "No se encontraron fletes registrados para esta combinación"
+                )
+
             return [r.dict() for r in registros]
 
     except Exception as e:

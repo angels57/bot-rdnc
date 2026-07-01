@@ -126,22 +126,72 @@ class BotHandler:
         elif costo:
             costo_sicetac = costo
 
+        if costo_sicetac:
+            logger.info(
+                f"✅ Se obtuvo costo SICETAC para ruta {params.origen} → {params.destino}: "
+                f"total=${costo_sicetac}, tonelada=${costo_tonelada or 'N/A'}"
+            )
+        else:
+            logger.warning(
+                f"❌ No se obtuvo costo SICETAC para ruta {params.origen} → {params.destino}"
+            )
+
         ruta_db = consultar_ruta(
             self.df,
             origen=origen_df,
             destino=destino_df,
             configuracion=params.configuracion,
         )
+
+        if ruta_db is not None and not ruta_db.is_empty():
+            logger.info(
+                f"✅ Se obtuvieron {len(ruta_db)} registros RDNC para ruta "
+                f"{params.origen} → {params.destino} (config: {params.configuracion})"
+            )
+        else:
+            logger.warning(
+                f"❌ No se encontraron datos RDNC para ruta {params.origen} → {params.destino}"
+            )
+
         ruta_sql = consultar_ruta_sql_server(
             origen=params.origen,
             destino=params.destino,
             configuracion=params.configuracion,
         )
 
+        if ruta_sql is not None and not ruta_sql.is_empty():
+            flete_tms = ruta_sql["Valor_Flete_Transportador"][0]
+            logger.info(
+                f"✅ Se obtuvo dato TMS para ruta {params.origen} → {params.destino}: "
+                f"${flete_tms:,.1f}"
+            )
+        else:
+            logger.warning(
+                f"❌ No se encontraron datos TMS para ruta {params.origen} → {params.destino}"
+            )
+
         fletes_registrados = consultar_fletes_registrados(
             origen=params.origen,
             destino=params.destino,
             configuracion=params.configuracion,
+        )
+
+        if fletes_registrados:
+            logger.info(
+                f"✅ Se encontraron {len(fletes_registrados)} registros previos para ruta "
+                f"{params.origen} → {params.destino}"
+            )
+        else:
+            logger.info(
+                f"[INFO] No se encontraron fletes registrados para ruta {params.origen} → {params.destino}"
+            )
+
+        logger.info(
+            f"📊 Resumen consulta {params.origen} → {params.destino}: "
+            f"RDNC={'✅' if ruta_db is not None and not ruta_db.is_empty() else '❌'}, "
+            f"TMS={'✅' if ruta_sql is not None and not ruta_sql.is_empty() else '❌'}, "
+            f"SICETAC={'✅' if costo_sicetac else '❌'}, "
+            f"Fletes={'✅' if fletes_registrados else '[INFO]'} ({len(fletes_registrados)})"
         )
 
         return {
