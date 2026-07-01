@@ -3,10 +3,13 @@ import streamlit as st
 
 def render_result(resultado: dict | None):
     """Renderiza el dataframe de resultados del bot."""
+    sicetac_valor = resultado["costo_sicetac"]
+    sicetac_disponible = bool(sicetac_valor) and str(sicetac_valor).strip() != ""
+
     if resultado["ruta_db"] is None or resultado["ruta_db"].is_empty():
         msg = "No encontre resultados exactos para esa ruta en RDNC. Probablemente no haya datos suficientes para esa combinación de origen, destino y configuración de vehículo. "
-        if resultado["costo_sicetac"]:
-            sicetac = f"- 🧾 Costo SICETAC: `{resultado['costo_sicetac']}`"
+        if sicetac_disponible:
+            sicetac = f"- 🧾 Costo SICETAC: `{sicetac_valor}`"
             msg += sicetac
         else:
             msg += "No se pudo obtener el costo de SICETAC para esta ruta."
@@ -17,7 +20,7 @@ def render_result(resultado: dict | None):
     # Agrupar por tipo de vehiculo por polars
     # grupos = resultado.partition_by("COD_CONFIG_VEHICULO", as_dict=True)
 
-    sicetac = resultado["costo_sicetac"]
+    sicetac = sicetac_valor if sicetac_disponible else "No disponible"
     lineas = [
         f"### 🚛 Resultados para {resultado['origen']} - {resultado['destino']}\n"
     ]

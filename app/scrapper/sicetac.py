@@ -238,7 +238,12 @@ async def playwright_sicetac(params: SicetacParams) -> str | bool:
             "Obtener valor del costo total del viaje",
             lambda: page.locator(SELECTOR_COSTO_TOTAL_VIAJE).input_value(),
         )
-        value = costo_tonelada
+        value = costo_tonelada.strip() if costo_tonelada else ""
+        if not value:
+            logger.warning(
+                "El campo de costo por tonelada de SICETAC llegó vacío tras el cálculo."
+            )
+            return False
 
         return value
     except Exception as e:
