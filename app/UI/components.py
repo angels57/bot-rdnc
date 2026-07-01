@@ -16,34 +16,6 @@ def render_result(resultado: dict | None):
         f"### 🚛 Resultados para {resultado['origen']} - {resultado['destino']}"
     )
 
-    # Caso sin datos en ninguna fuente
-    if (ruta_db is None or ruta_db.is_empty()) and (
-        ruta_sql is None or ruta_sql.is_empty()
-    ):
-        with st.container(border=True):
-            col_icon, col_msg = st.columns([1, 5])
-            with col_icon:
-                st.markdown("# ⚠️")
-            with col_msg:
-                st.markdown("#### No se encontraron resultados")
-                st.markdown(
-                    "No hay datos en **RDNC** ni en **TMS** para esta combinación "
-                    "de origen, destino y configuración de vehículo."
-                )
-                if resultado["costo_sicetac"]:
-                    st.metric(
-                        "🧾 Costo SICETAC disponible",
-                        f"${resultado['costo_sicetac']}",
-                    )
-                    if resultado.get("costo_tonelada"):
-                        st.metric(
-                            "💰 Costo por ton   elada",
-                            f"${resultado['costo_tonelada']}",
-                        )
-                else:
-                    st.warning("No se pudo obtener costo SICETAC para esta ruta.")
-        return None
-
     # Dos columnas: RDNC | TMS
     col_db, col_sql = st.columns(2)
 
