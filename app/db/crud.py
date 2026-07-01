@@ -36,3 +36,18 @@ def guardar_flete(
         session.refresh(db_flete)
         logger.info(f"Flete registrado: {origen} → {destino} (${tarifa:,.0f})")
         return db_flete
+
+
+def obtener_ultimos_registros(limite: int = 5) -> list[FleteRegistro]:
+    """Obtiene los últimos registros de fletes guardados."""
+    try:
+        with SessionLocal() as session:
+            return (
+                session.query(FleteRegistro)
+                .order_by(FleteRegistro.creado_en.desc())
+                .limit(limite)
+                .all()
+            )
+    except Exception as e:
+        logger.error(f"Error obteniendo últimos registros: {e}")
+        return []
