@@ -72,11 +72,11 @@ def render_result(resultado: dict | None):
                 st.metric("Costo por tonelada", "—")
                 st.caption("⛔ Sin datos")
 
-    # Registros previos — tarjeta de fletes registrados
+    # Precios fletes plaza — tarjeta de fletes registrados
     fletes_registrados = resultado.get("fletes_registrados", [])
     if fletes_registrados:
         with st.container(border=True):
-            st.markdown("#### 📝 Registros previos")
+            st.markdown("#### 📝 Precios fletes plaza")
             for registro in fletes_registrados[:5]:
                 col_f1, col_f2 = st.columns([3, 2])
                 with col_f1:
@@ -91,7 +91,7 @@ def render_result(resultado: dict | None):
                     st.caption(f"{fuente} · {agencia} · {fecha_corta}")
     else:
         with st.container(border=True):
-            st.markdown("#### 📝 Registros previos")
+            st.markdown("#### 📝 Precios fletes plaza")
             st.markdown("⛔ **Sin registros**")
             st.caption("No hay fletes registrados para esta combinación.")
 

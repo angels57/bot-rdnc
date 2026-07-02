@@ -58,19 +58,22 @@ def _show_nav_and_content():
     with st.sidebar:
         vista = st.radio(
             "Navegación",
-            ["🚛 Cotización", "📝 Registro"],
+            ["🚛 Cotización Comercial", "📝 Registro Fletes Plaza"],
             key="vista_actual",
         )
         st.divider()
         if st.button("🚪 Cerrar sesión"):
             cookie_manager = stx.CookieManager(key="auth_logout")
-            cookie_manager.delete("session_token")
+            try:
+                cookie_manager.delete("session_token")
+            except KeyError:
+                pass
             st.session_state.clear()
             st.rerun()
 
-    if vista == "🚛 Cotización":
+    if vista == "🚛 Cotización Comercial":
         render_cotizacion()
-    elif vista == "📝 Registro":
+    elif vista == "📝 Registro Fletes Plaza":
         render_registro()
 
 
