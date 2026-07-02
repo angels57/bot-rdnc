@@ -1,4 +1,4 @@
-"""Módulo para scrapping de SICETAC utilizando Playwright."""
+﻿"""MÃ³dulo para scrapping de SICETAC utilizando Playwright."""
 
 from playwright.async_api import TimeoutError as PlaywrightTimeout
 
@@ -29,7 +29,7 @@ logger = get_app_logger("main")
 
 @retry_on_timeout(retries=2, delay=1)
 async def abrir_sicetac(page):
-    """Abre la página de SICETAC y espera a que el selector de origen esté disponible."""
+    """Abre la pÃ¡gina de SICETAC y espera a que el selector de origen estÃ© disponible."""
     try:
         await page.goto(URL_SICETAC, timeout=15000)
         await page.wait_for_selector(SELECTOR_ORIGEN_VIAJE, timeout=10000)
@@ -39,44 +39,44 @@ async def abrir_sicetac(page):
 
 
 async def ensure_visible(page, selector: str, name: str):
-    "Asegura que un selector esté visible en la página, con manejo de errores y logging."
+    "Asegura que un selector estÃ© visible en la pÃ¡gina, con manejo de errores y logging."
     try:
         await page.wait_for_timeout(
             1000
-        )  # Espera un momento para que la página cargue elementos dinámicos
+        )  # Espera un momento para que la pÃ¡gina cargue elementos dinÃ¡micos
         await page.wait_for_selector(selector, timeout=5000)
     except PlaywrightTimeout:
-        logger.error(f"❌ Timeout esperando selector: {name} -> {selector}")
+        logger.error(f"âŒ Timeout esperando selector: {name} -> {selector}")
         raise
     except Exception:
-        logger.error(f"❌ Selector no visible: {name} -> {selector}")
+        logger.error(f"âŒ Selector no visible: {name} -> {selector}")
         raise
 
 
 async def safe_action(description: str, selector: str, action):
-    "Realiza una acción segura con manejo de errores y logging."
+    "Realiza una acciÃ³n segura con manejo de errores y logging."
     try:
-        logger.info(f"Realizando acción: {description} (selector: {selector})")
+        logger.info(f"Realizando acciÃ³n: {description} (selector: {selector})")
         return await action()
     except Exception as e:
-        logger.error(f"❌ Error en: {description}")
+        logger.error(f"âŒ Error en: {description}")
         logger.error(f"Selector: {selector}")
         logger.error(f"Detalle: {e!s}")
         raise
 
 
 async def retryable_action(page, selector: str, name: str, action, retries=2, delay=1):
-    "Realiza una acción con reintentos en caso de timeout."
+    "Realiza una acciÃ³n con reintentos en caso de timeout."
     last_error = None
 
     for attempt in range(1, retries + 1):
         try:
-            logger.info(f"🔁 Intento {attempt}/{retries} → {name}")
+            logger.info(f"ðŸ” Intento {attempt}/{retries} â†’ {name}")
 
             # 1. Validar que el selector exite
             await ensure_visible(page, selector, name)
 
-            # 2. Ejecutar la acción segura
+            # 2. Ejecutar la acciÃ³n segura
             result = await safe_action(name, selector, action)
 
             # 3. validacion opcional post accion
@@ -86,7 +86,7 @@ async def retryable_action(page, selector: str, name: str, action, retries=2, de
             last_error = e
 
             logger.warning(
-                f"⚠️ Fallo en intento {attempt} → {name} ({selector}) | Error: {e}"
+                f"âš ï¸ Fallo en intento {attempt} â†’ {name} ({selector}) | Error: {e}"
             )
 
             if attempt < retries:
@@ -94,14 +94,14 @@ async def retryable_action(page, selector: str, name: str, action, retries=2, de
 
             else:
                 logger.error(
-                    f"❌ FALLA DEFINITIVA en {name} después de {retries} intentos"
+                    f"âŒ FALLA DEFINITIVA en {name} despuÃ©s de {retries} intentos"
                 )
                 raise last_error
 
 
 async def playwright_sicetac(params: SicetacParams) -> dict | bool:
-    """Función placeholder para el scrapper de SICETAC."""
-    logger.info("playwright_sicetac aún no implementado.")
+    """FunciÃ³n placeholder para el scrapper de SICETAC."""
+    logger.info("playwright_sicetac aÃºn no implementado.")
 
     # options_path = Path("data/sicetac_combinaciones.json")
     # if not options_path.exists():
@@ -117,7 +117,7 @@ async def playwright_sicetac(params: SicetacParams) -> dict | bool:
         await retryable_action(
             page,
             SELECTOR_CONFIG_VEHICULO,
-            "Selector de configuración de vehículo",
+            "Selector de configuraciÃ³n de vehÃ­culo",
             lambda: page.locator(SELECTOR_CONFIG_VEHICULO).select_option(
                 params.configuracion
             ),
@@ -128,7 +128,7 @@ async def playwright_sicetac(params: SicetacParams) -> dict | bool:
         await retryable_action(
             page,
             SELECTOR_CONDICION_CARGA,
-            "Selector de condición de carga (reintento)",
+            "Selector de condiciÃ³n de carga (reintento)",
             lambda: page.locator(SELECTOR_CONDICION_CARGA).select_option(
                 params.condicion_carga
             ),
@@ -138,7 +138,7 @@ async def playwright_sicetac(params: SicetacParams) -> dict | bool:
         await retryable_action(
             page,
             SELECTOR_CARROCERIA_VEHICULO,
-            "Selector de carrocería",
+            "Selector de carrocerÃ­a",
             lambda: page.locator(SELECTOR_CARROCERIA_VEHICULO).select_option(
                 params.carroceria
             ),
@@ -218,7 +218,7 @@ async def playwright_sicetac(params: SicetacParams) -> dict | bool:
         await retryable_action(
             page,
             SELECTOR_BT_CALCULAR,
-            "Selector del botón calcular",
+            "Selector del botÃ³n calcular",
             lambda: page.locator(SELECTOR_BT_CALCULAR).click(),
         )
 
@@ -231,12 +231,6 @@ async def playwright_sicetac(params: SicetacParams) -> dict | bool:
             "Obtener valor del costo total del viaje",
             lambda: page.locator(SELECTOR_COSTO_TOTAL_VIAJE).input_value(),
         )
-        value = costo_tonelada.strip() if costo_tonelada else ""
-        if not value:
-            logger.warning(
-                "El campo de costo por tonelada de SICETAC llegó vacío tras el cálculo."
-            )
-            return False
 
         costo_tonelada = await retryable_action(
             page,

@@ -1,14 +1,20 @@
 from app.core import get_app_logger
-from app.db.session import SessionLocal, engine
+from app.db.session import get_engine, get_session_factory
 from app.models.flete import Base, FleteRegistro
 
 logger = get_app_logger("db_crud")
 
 
-def init_db():
+def init_db() -> bool:
     """Crea las tablas si no existen."""
-    Base.metadata.create_all(engine)
-    logger.info("Tablas de base de datos inicializadas")
+    try:
+        engine = get_engine()
+        Base.metadata.create_all(engine)
+        logger.info("Tablas de base de datos inicializadas")
+        return True
+    except Exception as e:
+        logger.error(f"Error creando tablas: {e}")
+        return False
 
 
 def guardar_flete(
@@ -19,9 +25,11 @@ def guardar_flete(
     tipo_flete: str,
     fuente: str,
     agencia: str,
-) -> FleteRegistro:
+) -> FleteRegistro | None:
     """Guarda un registro de flete en la base de datos."""
-    with SessionLocal() as session:
+    SessionLocal = get_session_factory()
+    session = SessionLocal()
+    try:
         db_flete = FleteRegistro(
             cod_vehiculo=cod_vehiculo,
             origen=origen,
@@ -36,18 +44,27 @@ def guardar_flete(
         session.refresh(db_flete)
         logger.info(f"Flete registrado: {origen} → {destino} (${tarifa:,.0f})")
         return db_flete
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error guardando flete: {e}")
+        return None
+    finally:
+        session.close()
 
 
 def obtener_ultimos_registros(limite: int = 5) -> list[FleteRegistro]:
     """Obtiene los últimos registros de fletes guardados."""
+    SessionLocal = get_session_factory()
+    session = SessionLocal()
     try:
-        with SessionLocal() as session:
-            return (
-                session.query(FleteRegistro)
-                .order_by(FleteRegistro.creado_en.desc())
-                .limit(limite)
-                .all()
-            )
+        return (
+            session.query(FleteRegistro)
+            .order_by(FleteRegistro.creado_en.desc())
+            .limit(limite)
+            .all()
+        )
     except Exception as e:
         logger.error(f"Error obteniendo últimos registros: {e}")
         return []
+    finally:
+        session.close()

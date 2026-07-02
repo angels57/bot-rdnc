@@ -1,7 +1,7 @@
 """Servicio para consultar registros de fletes desde la base de datos."""
 
 from app.core import get_app_logger
-from app.db.session import SessionLocal
+from app.db.session import get_session_factory
 from app.models.flete import FleteRegistro
 
 logger = get_app_logger("flete_service")
@@ -28,7 +28,9 @@ def consultar_fletes_registrados(
     )
 
     try:
-        with SessionLocal() as session:
+        SessionLocal = get_session_factory()
+        session = SessionLocal()
+        try:
             query = session.query(FleteRegistro).filter(
                 FleteRegistro.origen.ilike(f"%{origen}%"),
                 FleteRegistro.destino.ilike(f"%{destino}%"),
@@ -49,6 +51,8 @@ def consultar_fletes_registrados(
                 )
 
             return [r.dict() for r in registros]
+        finally:
+            session.close()
 
     except Exception as e:
         logger.error(f"Error consultando fletes registrados: {e}")

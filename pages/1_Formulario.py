@@ -7,7 +7,11 @@ import streamlit as st
 
 from app.db.crud import guardar_flete, init_db, obtener_ultimos_registros
 
-init_db()
+if "db_initialized" not in st.session_state:
+    st.session_state.db_initialized = init_db()
+if not st.session_state.db_initialized:
+    st.error("⚠️ No se pudo conectar a la base de datos. Contacta al administrador.")
+    st.stop()
 
 st.set_page_config(page_title="Registro de flete", page_icon="📝")
 st.title("Registro de precio de flete")
@@ -284,7 +288,7 @@ if origen and destino:
         )
         if guardar_clicked:
             with st.spinner("Guardando registro..."):
-                guardar_flete(
+                resultado = guardar_flete(
                     cod_vehiculo=cod_vehiculo,
                     origen=origen,
                     destino=destino,
@@ -293,6 +297,9 @@ if origen and destino:
                     fuente=fuente,
                     agencia=agencia,
                 )
-                st.success("✅ Registro guardado correctamente en la base de datos.")
+                if resultado:
+                    st.success("✅ Registro guardado correctamente en la base de datos.")
+                else:
+                    st.error("❌ No se pudo guardar el registro. Revisa la conexión a BD.")
 else:
     st.info("Selecciona origen y destino para ver el resumen.")
