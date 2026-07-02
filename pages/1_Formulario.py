@@ -127,7 +127,7 @@ if ultimos:
             ):
                 st.session_state.form_origen = registro.origen
                 st.session_state.form_destino = registro.destino
-                st.session_state.form_tarifa = registro.tarifa
+                st.session_state.form_tarifa = 0
                 st.session_state.form_tipo_flete = registro.tipo_flete
                 st.session_state.form_fuente = registro.fuente
                 st.session_state.form_agencia = registro.agencia
