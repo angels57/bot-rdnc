@@ -6,6 +6,17 @@ from pathlib import Path
 import streamlit as st
 
 from app.db.crud import guardar_flete, init_db, obtener_ultimos_registros
+from app.UI.login_page import render_login
+
+if not st.session_state.get("autenticado", False):
+    render_login()
+    st.stop()
+
+with st.sidebar:
+    st.divider()
+    if st.button("🚪 Cerrar sesión"):
+        st.session_state.clear()
+        st.rerun()
 
 if "db_initialized" not in st.session_state:
     st.session_state.db_initialized = init_db()
