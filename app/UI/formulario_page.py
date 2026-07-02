@@ -113,7 +113,7 @@ def render():
         )
 
     # --- 4. Valores sugeridos basados en historial ---
-    ultimos = obtener_ultimos_registros(5)
+    ultimos = obtener_ultimos_registros(10)
     if ultimos:
         st.subheader("📋 Registros recientes")
         cols = st.columns(len(ultimos))

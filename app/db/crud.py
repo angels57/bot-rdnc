@@ -52,17 +52,27 @@ def guardar_flete(
         session.close()
 
 
-def obtener_ultimos_registros(limite: int = 5) -> list[FleteRegistro]:
-    """Obtiene los últimos registros de fletes guardados."""
+def obtener_ultimos_registros(limite: int = 10) -> list[FleteRegistro]:
+    """Obtiene los últimos registros únicos por COD+origen+destino."""
     SessionLocal = get_session_factory()
     session = SessionLocal()
     try:
-        return (
+        registros = (
             session.query(FleteRegistro)
             .order_by(FleteRegistro.creado_en.desc())
-            .limit(limite)
+            .limit(50)
             .all()
         )
+        vistos = set()
+        unicos = []
+        for r in registros:
+            key = (r.cod_vehiculo, r.origen, r.destino)
+            if key not in vistos:
+                vistos.add(key)
+                unicos.append(r)
+                if len(unicos) >= limite:
+                    break
+        return unicos
     except Exception as e:
         logger.error(f"Error obteniendo últimos registros: {e}")
         return []
