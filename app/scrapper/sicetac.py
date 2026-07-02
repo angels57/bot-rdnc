@@ -231,6 +231,7 @@ async def playwright_sicetac(params: SicetacParams) -> dict | bool:
             "Obtener valor del costo total del viaje",
             lambda: page.locator(SELECTOR_COSTO_TOTAL_VIAJE).input_value(),
         )
+        logger.debug(f"Valor obtenido de costo total: {costo_total}")
 
         costo_tonelada = await retryable_action(
             page,
@@ -238,10 +239,16 @@ async def playwright_sicetac(params: SicetacParams) -> dict | bool:
             "Obtener valor del costo por tonelada",
             lambda: page.locator(SELECTOR_COSTO_TONELADA).input_value(),
         )
-
+        logger.debug(f"Valor obtenido de costo por tonelada: {costo_tonelada}")
         # Limpiar formato monetario que SICETAC incluye
-        costo_total = costo_total.replace("$", "").replace(",", "").strip() if costo_total else ""
-        costo_tonelada = costo_tonelada.replace("$", "").replace(",", "").strip() if costo_tonelada else ""
+        costo_total = (
+            costo_total.replace("$", "").replace(",", "").strip() if costo_total else ""
+        )
+        costo_tonelada = (
+            costo_tonelada.replace("$", "").replace(",", "").strip()
+            if costo_tonelada
+            else ""
+        )
 
         return {"costo_total": costo_total, "costo_tonelada": costo_tonelada}
     except Exception as e:

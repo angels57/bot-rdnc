@@ -52,12 +52,16 @@ def render_result(resultado: dict | None):
         col_c1, col_c2 = st.columns(2)
         with col_c1:
             if resultado["costo_sicetac"]:
-                st.markdown(f"**🧾 Costo SICETAC (total)**\n\n`${resultado['costo_sicetac']}`")
+                st.markdown(
+                    f"**🧾 Costo SICETAC (total)**\n\n`${resultado['costo_sicetac']}`"
+                )
             else:
                 st.warning("No se pudo obtener costo SICETAC")
         with col_c2:
             if resultado.get("costo_tonelada"):
-                st.markdown(f"**💰 Costo por tonelada**\n\n`${resultado['costo_tonelada']}`")
+                st.markdown(
+                    f"**💰 Costo por tonelada**\n\n`${resultado['costo_tonelada']}`"
+                )
 
     # Registros previos — tarjeta de fletes registrados
     fletes_registrados = resultado.get("fletes_registrados", [])

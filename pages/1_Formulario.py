@@ -145,8 +145,8 @@ cod_vehiculo = st.selectbox(
     "COD vehiculo",
     [c["id"] for c in CONFIGURACIONES_VEHICULO],
     key="form_cod_vehiculo",
+    format_func=lambda cod: f"{cod} — {next((c['valor'] for c in CONFIGURACIONES_VEHICULO if c['id'] == cod), '')}",
 )
-st.caption("Código según SICETAC: 3S3, 3S2, V2, etc.")
 
 # Origen con validación visual
 col_origen, col_status_origen = st.columns([5, 1])

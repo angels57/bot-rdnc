@@ -376,12 +376,14 @@ def render():
                 disabled=st.session_state.loading,
             )
 
+    configuracion = st.selectbox(
+        "COD vehiculo",
+        [c["id"] for c in CONFIGURACIONES_VEHICULO],
+        format_func=lambda cod: f"{cod} — {next((c['valor'] for c in CONFIGURACIONES_VEHICULO if c['id'] == cod), '')}",
+    )
+
     col1, col2, col3 = st.columns([3, 5, 5])
     with col1:
-        configuracion = st.selectbox(
-            "COD vehiculo",
-            [c["id"] for c in CONFIGURACIONES_VEHICULO],
-        )
         condicion_carga = st.selectbox(
             "Condición de carga",
             ["CARGADO", "VACIO"],
