@@ -22,7 +22,7 @@ class JSONFormatter(logging.Formatter):
 
 def get_app_logger(
     name: str = "app",
-    level: str = "INFO",
+    level: str = "DEBUG",
     log_file: str = "logs/app.json",
 ) -> logging.Logger:
     """Obtiene el logger de la aplicación."""
