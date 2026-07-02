@@ -49,19 +49,28 @@ def render_result(resultado: dict | None):
 
     # SICETAC — tarjeta inferior
     with st.container(border=True):
+        st.markdown("#### 🧾 SICETAC")
         col_c1, col_c2 = st.columns(2)
         with col_c1:
             if resultado["costo_sicetac"]:
-                st.markdown(
-                    f"**🧾 Costo SICETAC (total)**\n\n`${resultado['costo_sicetac']}`"
-                )
+                try:
+                    valor = float(resultado["costo_sicetac"])
+                    st.metric("Costo total del viaje", f"${valor:,.0f}")
+                except (ValueError, TypeError):
+                    st.metric("Costo total del viaje", resultado["costo_sicetac"])
             else:
-                st.warning("No se pudo obtener costo SICETAC")
+                st.metric("Costo total del viaje", "—")
+                st.caption("⛔ Sin datos")
         with col_c2:
             if resultado.get("costo_tonelada"):
-                st.markdown(
-                    f"**💰 Costo por tonelada**\n\n`${resultado['costo_tonelada']}`"
-                )
+                try:
+                    valor = float(resultado["costo_tonelada"])
+                    st.metric("Costo por tonelada", f"${valor:,.0f}")
+                except (ValueError, TypeError):
+                    st.metric("Costo por tonelada", resultado["costo_tonelada"])
+            else:
+                st.metric("Costo por tonelada", "—")
+                st.caption("⛔ Sin datos")
 
     # Registros previos — tarjeta de fletes registrados
     fletes_registrados = resultado.get("fletes_registrados", [])
