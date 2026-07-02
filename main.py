@@ -7,6 +7,7 @@ from app.services.auth_service import verify_token
 from app.UI.chat_page import render as render_cotizacion
 from app.UI.formulario_page import render as render_registro
 from app.UI.login_page import render_login
+from app.UI.masivo_page import render as render_masivo
 
 
 def main():
@@ -28,6 +29,11 @@ def main():
     if "cookies_loaded" not in st.session_state:
         st.session_state.cookies_loaded = True
         st.info("Cargando sesión...")
+        return
+
+    if st.session_state.get("force_login"):
+        del st.session_state.force_login
+        render_login(cookie_manager)
         return
 
     token = all_cookies.get("session_token")
@@ -58,7 +64,7 @@ def _show_nav_and_content():
     with st.sidebar:
         vista = st.radio(
             "Navegación",
-            ["🚛 Cotización Comercial", "📝 Registro Fletes Plaza"],
+            ["🚛 Cotización Comercial", "📊 Cotización Comercial Masivo", "📝 Registro Fletes Plaza"],
             key="vista_actual",
         )
         st.divider()
@@ -69,10 +75,13 @@ def _show_nav_and_content():
             except KeyError:
                 pass
             st.session_state.clear()
+            st.session_state["force_login"] = True
             st.rerun()
 
     if vista == "🚛 Cotización Comercial":
         render_cotizacion()
+    elif vista == "📊 Cotización Comercial Masivo":
+        render_masivo()
     elif vista == "📝 Registro Fletes Plaza":
         render_registro()
 
