@@ -1,45 +1,41 @@
 """Módulo principal para ejecutar el bot de scrapping de RDNC y SICETAC."""
 
-import asyncio
-import os
-from datetime import date, datetime
-
 import streamlit as st
 
-from app.core.logging import get_app_logger
-from app.scrapper import playwright_rndc
-from app.UI.chat_page import render
+from app.UI.chat_page import render as render_cotizacion
+from app.UI.formulario_page import render as render_registro
 from app.UI.login_page import render_login
-
-logger = get_app_logger("main")
-DATA_FILE = "data/RNDC.xlsx"
-
-
-def archivo_es_del_mes_actual(path: str) -> bool:
-    if not os.path.exists(path):
-        return False
-    mod_time = datetime.fromtimestamp(os.path.getmtime(path))
-    return mod_time.year == date.today().year and mod_time.month == date.today().month
 
 
 def main():
+    st.set_page_config(
+        page_title="Bot RNDC",
+        page_icon="🚛",
+        initial_sidebar_state="expanded",
+    )
+
+    # Gate de autenticación centralizado
     if not st.session_state.get("autenticado", False):
         render_login()
         return
 
+    # Navegación + logout en sidebar
     with st.sidebar:
+        vista = st.radio(
+            "Navegación",
+            ["🚛 Cotización", "📝 Registro"],
+            key="vista_actual",
+        )
         st.divider()
         if st.button("🚪 Cerrar sesión"):
             st.session_state.clear()
             st.rerun()
 
-    render()
-
-    # if date.today().day == 1 and not archivo_es_del_mes_actual(DATA_FILE):
-    #    try:
-    #        asyncio.run(playwright_rndc())
-    #    except Exception as e:
-    #        logger.error(f"Error ejecutando playwright_rndc: {e!s}")
+    # Render condicional
+    if vista == "🚛 Cotización":
+        render_cotizacion()
+    elif vista == "📝 Registro":
+        render_registro()
 
 
 if __name__ == "__main__":

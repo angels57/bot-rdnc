@@ -304,7 +304,6 @@ def ejecutar(
 def render():
     """Renderiza la interfaz de chat para cotización de rutas RNDC."""
 
-    st.set_page_config(page_title="Bot RNDC", page_icon="🚛")
     st.title("Cotizacion de Rutas RNDC")
 
     state.init_state()

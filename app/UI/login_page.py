@@ -7,7 +7,6 @@ from app.services.auth_service import autenticar
 
 def render_login():
     """Muestra el formulario de login."""
-    st.set_page_config(page_title="Login", page_icon="🔐")
     st.title("🔐 Iniciar sesión")
 
     with st.form("login_form"):
