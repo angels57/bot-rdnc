@@ -2,10 +2,10 @@
 
 import streamlit as st
 
-from app.services.auth_service import autenticar
+from app.services.auth_service import autenticar, create_token
 
 
-def render_login():
+def render_login(cookie_manager=None):
     """Muestra el formulario de login."""
     st.title("🔐 Iniciar sesión")
 
@@ -24,8 +24,12 @@ def render_login():
                 st.session_state.autenticado = True
                 st.session_state.usuario = usuario
                 st.session_state.rol = usuario["role"]
+
+                if cookie_manager:
+                    token = create_token(usuario["nick"], usuario["role"])
+                    cookie_manager.set("session_token", token)
+
                 st.success(f"✅ Bienvenido, {usuario['nombres']}!")
-                st.rerun()
             else:
                 st.error("❌ Usuario o contraseña no válidos.")
 

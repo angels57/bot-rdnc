@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     DATABASE_URL: str = ""
     DATABASE_URL_REGISTER: str = ""
+    COOKIE_SECRET: str = "change-me-in-production"
 
     model_config = SettingsConfigDict(
         env_file=".env",

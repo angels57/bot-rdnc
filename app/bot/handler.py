@@ -178,7 +178,7 @@ class BotHandler:
 
         if fletes_registrados:
             logger.info(
-                f"✅ Se encontraron {len(fletes_registrados)} registros previos para ruta "
+                f"✅ Se encontraron {len(fletes_registrados)} Precio flete Plaza para ruta "
                 f"{params.origen} → {params.destino}"
             )
         else:

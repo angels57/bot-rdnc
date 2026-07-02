@@ -1,6 +1,14 @@
 """Servicio de autenticación contra la tabla usuarios con bcrypt."""
 
+import base64
+import hashlib
+import hmac
+import json
+import time
+
 import bcrypt
+
+from app.config.settings import settings
 from app.core import get_app_logger
 from app.db.session import get_session_factory
 from app.models.usuario import Usuario
@@ -57,3 +65,39 @@ def autenticar(nick: str, password: str) -> dict | None:
         return None
     finally:
         session.close()
+
+
+SECRET_KEY = settings.COOKIE_SECRET
+
+
+def create_token(nick: str, role: str, expires_in: int = 3600) -> str:
+    """Crea un token HMAC firmado para cookie de sesión."""
+    payload = {
+        "nick": nick,
+        "role": role,
+        "exp": int(time.time()) + expires_in,
+    }
+    payload_json = json.dumps(payload, separators=(",", ":"))
+    sig = hmac.new(
+        SECRET_KEY.encode(), payload_json.encode(), hashlib.sha256
+    ).hexdigest()
+    token_data = f"{payload_json}.{sig}"
+    return base64.urlsafe_b64encode(token_data.encode()).decode()
+
+
+def verify_token(token: str) -> dict | None:
+    """Verifica un token HMAC. Retorna payload si válido, None si no."""
+    try:
+        token_data = base64.urlsafe_b64decode(token.encode()).decode()
+        payload_json, sig = token_data.rsplit(".", 1)
+        expected_sig = hmac.new(
+            SECRET_KEY.encode(), payload_json.encode(), hashlib.sha256
+        ).hexdigest()
+        if not hmac.compare_digest(sig, expected_sig):
+            return None
+        payload = json.loads(payload_json)
+        if int(time.time()) > payload["exp"]:
+            return None
+        return payload
+    except Exception:
+        return None
