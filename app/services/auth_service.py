@@ -15,7 +15,7 @@ from app.models.usuario import Usuario
 
 logger = get_app_logger("auth_service")
 
-ROLES_PERMITIDOS = {"ADMIN"}
+ROLES_PERMITIDOS = {"ADMIN", "FLETES", "COMERCIAL"}
 
 
 def autenticar(nick: str, password: str) -> dict | None:
