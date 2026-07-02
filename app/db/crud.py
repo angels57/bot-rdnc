@@ -145,3 +145,100 @@ def crear_usuario(
         return None
     finally:
         session.close()
+
+
+def listar_usuarios() -> list[Usuario]:
+    """Lista usuarios de los 3 roles permitidos."""
+    SessionLocal = get_session_factory()
+    session = SessionLocal()
+    try:
+        return (
+            session.query(Usuario)
+            .filter(Usuario.usr_role.in_(["ADMIN", "FLETES", "COMERCIAL"]))
+            .order_by(Usuario.usr_nick)
+            .all()
+        )
+    except Exception as e:
+        logger.error(f"Error listando usuarios: {e}")
+        return []
+    finally:
+        session.close()
+
+
+def actualizar_usuario(
+    nick: str,
+    nombres: str,
+    apellidos: str,
+    role: str,
+) -> bool:
+    """Actualiza nombres, apellidos y rol de un usuario."""
+    SessionLocal = get_session_factory()
+    session = SessionLocal()
+    try:
+        usuario = session.query(Usuario).filter(
+            Usuario.usr_nick == nick
+        ).first()
+        if not usuario:
+            return False
+        usuario.usr_nombres = nombres.strip()
+        usuario.usr_apellidos = apellidos.strip()
+        usuario.usr_role = role
+        session.commit()
+        logger.info(f"Usuario actualizado: {nick}")
+        return True
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error actualizando usuario: {e}")
+        return False
+    finally:
+        session.close()
+
+
+def resetear_password(nick: str) -> str | None:
+    """Genera nueva contraseña, actualiza hash, retorna password plano."""
+    SessionLocal = get_session_factory()
+    session = SessionLocal()
+    try:
+        usuario = session.query(Usuario).filter(
+            Usuario.usr_nick == nick
+        ).first()
+        if not usuario:
+            return None
+        alfabeto = string.ascii_letters + string.digits
+        password_plano = "".join(secrets.choice(alfabeto) for _ in range(10))
+        hashed = bcrypt.hashpw(
+            password_plano.encode("utf-8"),
+            bcrypt.gensalt(rounds=10),
+        ).decode("utf-8")
+        usuario.usr_password = hashed
+        session.commit()
+        logger.info(f"Password reseteado para: {nick}")
+        return password_plano
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error reseteando password: {e}")
+        return None
+    finally:
+        session.close()
+
+
+def eliminar_usuario(nick: str) -> bool:
+    """Elimina un usuario por nick."""
+    SessionLocal = get_session_factory()
+    session = SessionLocal()
+    try:
+        usuario = session.query(Usuario).filter(
+            Usuario.usr_nick == nick
+        ).first()
+        if not usuario:
+            return False
+        session.delete(usuario)
+        session.commit()
+        logger.info(f"Usuario eliminado: {nick}")
+        return True
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error eliminando usuario: {e}")
+        return False
+    finally:
+        session.close()

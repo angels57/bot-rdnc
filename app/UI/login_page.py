@@ -25,6 +25,9 @@ def render_login(cookie_manager=None):
                 st.session_state.usuario = usuario
                 st.session_state.rol = usuario["role"]
 
+                if "force_login" in st.session_state:
+                    del st.session_state.force_login
+
                 if cookie_manager:
                     token = create_token(usuario["nick"], usuario["role"])
                     cookie_manager.set("session_token", token)

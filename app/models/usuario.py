@@ -13,3 +13,8 @@ class Usuario(Base):
     usr_apellidos = Column(String(100), nullable=False)
     usr_password = Column(String(4000), nullable=False)
     usr_role = Column(String(50), nullable=False)
+
+
+Link: https://www.impocoma.com.co:8084/cotizacion
+Usuario: p2adqwe
+Contraseña: XSam7RGMJf

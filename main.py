@@ -33,7 +33,6 @@ def main():
         return
 
     if st.session_state.get("force_login"):
-        del st.session_state.force_login
         render_login(cookie_manager)
         return
 
@@ -75,14 +74,14 @@ def _show_nav_and_content():
         vista = st.radio("Navegación", opciones, key="vista_actual")
         st.divider()
         if st.button("🚪 Cerrar sesión"):
+            st.session_state.clear()
+            st.session_state["force_login"] = True
             cookie_manager = stx.CookieManager(key="auth_logout")
             try:
                 cookie_manager.delete("session_token")
             except KeyError:
                 pass
-            st.session_state.clear()
-            st.session_state["force_login"] = True
-            st.rerun()
+            st.stop()
 
     if vista == "🚛 Cotización Comercial":
         render_cotizacion()
