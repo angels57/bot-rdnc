@@ -116,24 +116,29 @@ def render():
     ultimos = obtener_ultimos_registros(10)
     if ultimos:
         st.subheader("📋 Registros recientes")
-        cols = st.columns(len(ultimos))
-        for i, registro in enumerate(ultimos):
-            with cols[i]:
-                label = f"{registro.origen} → {registro.destino}\n${registro.tarifa:,.0f}"
-                if st.button(
-                    label,
-                    key=f"reciente_{registro.id}",
-                    use_container_width=True,
-                    help="Clic para usar estos datos",
-                ):
-                    st.session_state.form_origen = registro.origen
-                    st.session_state.form_destino = registro.destino
-                    st.session_state.form_tarifa = 0
-                    st.session_state.form_tipo_flete = registro.tipo_flete
-                    st.session_state.form_fuente = registro.fuente
-                    st.session_state.form_agencia = registro.agencia
-                    st.session_state.form_cod_vehiculo = registro.cod_vehiculo
-                    st.rerun()
+        for i in range(0, len(ultimos), 2):
+            cols = st.columns(2)
+            for j in range(2):
+                if i + j < len(ultimos):
+                    registro = ultimos[i + j]
+                    with cols[j]:
+                        origen_corto = registro.origen.split(" - ")[0].strip()
+                        destino_corto = registro.destino.split(" - ")[0].strip()
+                        label = f"{registro.cod_vehiculo} | {origen_corto} → {destino_corto}"
+                        if st.button(
+                            label,
+                            key=f"reciente_{registro.id}",
+                            use_container_width=True,
+                            help="Clic para usar estos datos",
+                        ):
+                            st.session_state.form_origen = registro.origen
+                            st.session_state.form_destino = registro.destino
+                            st.session_state.form_tarifa = 0
+                            st.session_state.form_tipo_flete = registro.tipo_flete
+                            st.session_state.form_fuente = registro.fuente
+                            st.session_state.form_agencia = registro.agencia
+                            st.session_state.form_cod_vehiculo = registro.cod_vehiculo
+                            st.rerun()
         st.divider()
 
     # --- Datos base ---
