@@ -8,6 +8,7 @@ from app.UI.chat_page import render as render_cotizacion
 from app.UI.formulario_page import render as render_registro
 from app.UI.login_page import render_login
 from app.UI.masivo_page import render as render_masivo
+from app.UI.usuarios_page import render as render_usuarios
 
 
 def main():
@@ -62,11 +63,16 @@ def main():
 def _show_nav_and_content():
     """Muestra navegación + contenido según vista seleccionada."""
     with st.sidebar:
-        vista = st.radio(
-            "Navegación",
-            ["🚛 Cotización Comercial", "📊 Cotización Comercial Masivo", "📝 Registro Fletes Plaza"],
-            key="vista_actual",
-        )
+        rol = st.session_state.get("rol", "")
+        opciones = [
+            "🚛 Cotización Comercial",
+            "📊 Cotización Comercial Masivo",
+            "📝 Registro Fletes Plaza",
+        ]
+        if rol == "ADMIN":
+            opciones.append("👥 Crear Usuario")
+
+        vista = st.radio("Navegación", opciones, key="vista_actual")
         st.divider()
         if st.button("🚪 Cerrar sesión"):
             cookie_manager = stx.CookieManager(key="auth_logout")
@@ -84,6 +90,8 @@ def _show_nav_and_content():
         render_masivo()
     elif vista == "📝 Registro Fletes Plaza":
         render_registro()
+    elif vista == "👥 Crear Usuario":
+        render_usuarios()
 
 
 if __name__ == "__main__":

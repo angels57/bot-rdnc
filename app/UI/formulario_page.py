@@ -220,16 +220,16 @@ def render():
     # Fuente con validación visual
     col_fuente, col_status_fuente = st.columns([5, 1])
     with col_fuente:
-        fuente = st.text_input(
+        fuente = st.selectbox(
             "Fuente",
-            placeholder="Cliente, Conductor o otros",
+            ["", "COMPETENCIA", "CONDUCTOR", "CLIENTE", "WHATSAPP", "OTROS"],
             key="form_fuente",
         )
     with col_status_fuente:
         st.markdown("")
         st.markdown("")
-        st.markdown("✅" if fuente.strip() else "❌")
-    st.caption("¿De dónde obtuviste el precio? Cliente, Conductor, SICETAC, u otros")
+        st.markdown("✅" if fuente else "❌")
+    st.caption("¿De dónde obtuviste el precio?")
 
     # Agencia
     agencia = st.selectbox(
@@ -257,7 +257,7 @@ def render():
         "Origen": origen,
         "Destino": destino,
         "Valor flete": tarifa > 0,
-        "Fuente": fuente.strip(),
+        "Fuente": fuente,
     }
     campos_faltantes = [
         nombre for nombre, valor in campos_obligatorios.items() if not valor

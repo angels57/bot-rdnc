@@ -1,8 +1,32 @@
+import secrets
+import string
+import unicodedata
+
+import bcrypt
+
 from app.core import get_app_logger
 from app.db.session import get_engine, get_session_factory
 from app.models.flete import Base, FleteRegistro
+from app.models.usuario import Usuario
 
 logger = get_app_logger("db_crud")
+
+
+def _generar_nick(nombres: str, apellidos: str, session) -> str:
+    """Genera un nick único: primera letra del nombre + apellido."""
+    def limpiar(texto: str) -> str:
+        texto = unicodedata.normalize("NFKD", texto.lower())
+        texto = texto.encode("ascii", "ignore").decode("ascii")
+        return texto.strip()
+    
+    base = limpiar(nombres)[0] + limpiar(apellidos).replace(" ", "")
+    
+    nick = base
+    contador = 1
+    while session.query(Usuario).filter(Usuario.usr_nick == nick).first():
+        nick = f"{base}{contador}"
+        contador += 1
+    return nick
 
 
 def init_db() -> bool:
@@ -76,5 +100,48 @@ def obtener_ultimos_registros(limite: int = 10) -> list[FleteRegistro]:
     except Exception as e:
         logger.error(f"Error obteniendo últimos registros: {e}")
         return []
+    finally:
+        session.close()
+
+
+def crear_usuario(
+    nombres: str,
+    apellidos: str,
+    role: str,
+) -> dict | None:
+    """Crea un usuario con nick y contraseña auto-generados.
+
+    Returns:
+        dict con nick y password si se creó OK,
+        None si falló.
+    """
+    SessionLocal = get_session_factory()
+    session = SessionLocal()
+    try:
+        nick = _generar_nick(nombres, apellidos, session)
+
+        alfabeto = string.ascii_letters + string.digits
+        password_plano = "".join(secrets.choice(alfabeto) for _ in range(10))
+
+        hashed = bcrypt.hashpw(
+            password_plano.encode("utf-8"),
+            bcrypt.gensalt(rounds=10),
+        ).decode("utf-8")
+
+        nuevo = Usuario(
+            usr_nick=nick,
+            usr_nombres=nombres.strip(),
+            usr_apellidos=apellidos.strip(),
+            usr_password=hashed,
+            usr_role=role,
+        )
+        session.add(nuevo)
+        session.commit()
+        logger.info(f"Usuario creado: {nick} (rol: {role})")
+        return {"nick": nick, "password": password_plano}
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error creando usuario: {e}")
+        return None
     finally:
         session.close()
