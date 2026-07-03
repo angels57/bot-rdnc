@@ -11,12 +11,12 @@ import bcrypt
 from app.config.settings import settings
 from app.core import get_app_logger
 from app.db.session import get_session_factory
-from app.models.usuario import Usuario
+from app.models.usuario import ROLES, Usuario
 from app.db.crud import actualizar_ultima_conexion
 
 logger = get_app_logger("auth_service")
 
-ROLES_PERMITIDOS = {"ADMIN", "FLETES", "COMERCIAL"}
+ROLES_PERMITIDOS = set(ROLES)
 
 
 def autenticar(nick: str, password: str) -> dict | None:
