@@ -117,16 +117,3 @@ def render():
     st.caption(
         "Nota: este reporte agrupa por el valor literal de la columna `agencia` en los registros."
     )
-        mime="text/csv",
-    )
-
-    # KPI
-    total_registros = df["total"].sum()
-    total_agencias = df.shape[0]
-    col1, col2 = st.columns(2)
-    col1.metric("Agencias listadas", f"{total_agencias}")
-    col2.metric("Registros (sum)", f"{total_registros}")
-
-    st.caption(
-        "Nota: este reporte agrupa por el valor literal de la columna `agencia` en los registros."
-    )
