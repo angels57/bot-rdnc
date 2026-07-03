@@ -118,7 +118,9 @@ def render():
     configuracion = st.selectbox(
         "COD vehiculo",
         [c["id"] for c in CONFIGURACIONES_VEHICULO],
-        format_func=lambda cod: f"{cod} — {next((c['valor'] for c in CONFIGURACIONES_VEHICULO if c['id'] == cod), '')}",
+        format_func=lambda cod: (
+            f"{cod} — {next((c['valor'] for c in CONFIGURACIONES_VEHICULO if c['id'] == cod), '')}"
+        ),
     )
 
     col1, col2, col3 = st.columns([3, 5, 5])
@@ -170,6 +172,39 @@ def render():
                 "Granel Sólido",
             ],
             key="tipo_carga",
+        )
+
+    # Calculadora de comisión independiente
+    with st.expander("💰 Calcular valor + comisión"):
+        valor_base = st.number_input(
+            "Valor base",
+            min_value=0.0,
+            value=0.0,
+            step=1000.0,
+            format="%.2f",
+            key="valor_base_comision",
+        )
+        porcentaje_comision = st.number_input(
+            "Porcentaje de comisión (%)",
+            min_value=0.0,
+            max_value=100.0,
+            value=0.0,
+            step=0.1,
+            format="%.1f",
+            key="porcentaje_comision",
+        )
+
+        comision = valor_base * porcentaje_comision / 100.0
+        total_con_comision = valor_base + comision
+
+        col_comision, col_total = st.columns(2)
+        with col_comision:
+            st.metric("Comisión", f"${comision:,.2f}")
+        with col_total:
+            st.metric("Valor + comisión", f"${total_con_comision:,.2f}")
+
+        st.caption(
+            "Esta calculadora aplica una comisión sobre el valor base y muestra el total a cobrar."
         )
 
     # Botón fuera del handler: se deshabilita cuando `loading` es True

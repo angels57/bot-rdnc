@@ -10,6 +10,7 @@ from app.UI.formulario_page import render as render_registro
 from app.UI.login_page import render_login
 from app.UI.masivo_page import render as render_masivo
 from app.UI.usuarios_page import render as render_usuarios
+from app.UI.reporte_page import render as render_reporte
 
 
 def main():
@@ -72,9 +73,7 @@ def _show_nav_and_content():
     with st.sidebar:
         # Mostrar información del usuario en la parte superior izquierda
         usuario = st.session_state.get("usuario", {})
-        nombre_completo = (
-            f"{usuario.get('nombres','').strip()} {usuario.get('apellidos','').strip()}".strip()
-        )
+        nombre_completo = f"{usuario.get('nombres', '').strip()} {usuario.get('apellidos', '').strip()}".strip()
         if not nombre_completo:
             nombre_completo = usuario.get("nick", "")
         agencia = usuario.get("agencia") or "N/A"
@@ -90,10 +89,11 @@ def _show_nav_and_content():
         if rol in ("ADMIN", "COMERCIAL"):
             opciones.append("🚛 Cotización Comercial")
             opciones.append("📊 Cotización Comercial Masivo")
+            opciones.append("📈 Reporte")
         if rol in ("ADMIN", "FLETES"):
             opciones.append("📝 Registro Fletes Plaza")
         if rol == "ADMIN":
-            opciones.append("👥 Crear Usuario")
+            opciones.append("👥 Administrar Usuarios")
 
         vista = st.radio("Navegación", opciones, key="vista_actual")
         st.divider()
@@ -113,8 +113,10 @@ def _show_nav_and_content():
         render_masivo()
     elif vista == "📝 Registro Fletes Plaza":
         render_registro()
-    elif vista == "👥 Crear Usuario":
+    elif vista == "👥 Administrar Usuarios":
         render_usuarios()
+    elif vista == "📈 Reporte":
+        render_reporte()
 
 
 if __name__ == "__main__":

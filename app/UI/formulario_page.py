@@ -151,7 +151,9 @@ def render():
         "COD vehiculo",
         [c["id"] for c in CONFIGURACIONES_VEHICULO],
         key="form_cod_vehiculo",
-        format_func=lambda cod: f"{cod} — {next((c['valor'] for c in CONFIGURACIONES_VEHICULO if c['id'] == cod), '')}",
+        format_func=lambda cod: (
+            f"{cod} — {next((c['valor'] for c in CONFIGURACIONES_VEHICULO if c['id'] == cod), '')}"
+        ),
     )
 
     # Origen con validación visual
@@ -215,7 +217,9 @@ def render():
         ["Por viaje", "Por tonelada"],
         key="form_tipo_flete",
     )
-    st.caption("Por viaje: precio fijo por ruta. Por tonelada: precio variable según carga.")
+    st.caption(
+        "Por viaje: precio fijo por ruta. Por tonelada: precio variable según carga."
+    )
 
     # Fuente con validación visual
     col_fuente, col_status_fuente = st.columns([5, 1])
@@ -231,13 +235,16 @@ def render():
         st.markdown("✅" if fuente else "❌")
     st.caption("¿De dónde obtuviste el precio?")
 
-    # Agencia
-    agencia = st.selectbox(
-        "Agencia",
-        AGENCIAS,
-        key="form_agencia",
-    )
-    st.caption("Agencia o sucursal responsable del flete")
+    # Agencia: tomar desde el perfil del usuario autenticado
+    usuario_agencia = st.session_state.get("usuario", {}).get("agencia")
+    if not usuario_agencia:
+        st.warning("No se detectó agencia en tu perfil. Contacta al administrador.")
+        agencia = None
+        guardar_habilitado_por_agencia = False
+    else:
+        agencia = usuario_agencia
+        guardar_habilitado_por_agencia = True
+    st.caption(f"Agencia asignada desde perfil: {agencia if agencia else 'N/A'}")
 
     # --- 5. Indicador de progreso ---
     campos_totales = 4
@@ -271,15 +278,15 @@ def render():
             st.markdown("### 📋 Resumen del registro")
             st.markdown(
                 f"""
-| Campo | Valor |
-|---|---|
-| 🚛 **Configuración** | `{cod_vehiculo}` |
-| 📍 **Plaza** | `{origen} → {destino}` |
-| 💰 **Valor flete** | `${tarifa:,.0f}` |
-| 📊 **Tipo** | `{tipo_flete if tipo_flete else "_Sin especificar_"}` |
-| 📎 **Fuente** | `{fuente if fuente else "_Sin especificar_"}` |
-| 🏢 **Agencia** | `{agencia if agencia else "_Sin especificar_"}` |
-        """
+                | Campo | Valor |
+                |---|---|
+                | 🚛 **Configuración** | `{cod_vehiculo}` |
+                | 📍 **Plaza** | `{origen} → {destino}` |
+                | 💰 **Valor flete** | `${tarifa:,.0f}` |
+                | 📊 **Tipo** | `{tipo_flete if tipo_flete else "_Sin especificar_"}` |
+                | 📎 **Fuente** | `{fuente if fuente else "_Sin especificar_"}` |
+                | 🏢 **Agencia** | `{agencia if agencia else "_Sin especificar_"}` |
+                """
             )
 
             if not todo_completo:
@@ -290,7 +297,7 @@ def render():
                 "💾 Guardar registro",
                 type="primary",
                 use_container_width=True,
-                disabled=not todo_completo,
+                disabled=not (todo_completo and guardar_habilitado_por_agencia),
             )
             if guardar_clicked:
                 with st.spinner("Guardando registro..."):
@@ -304,8 +311,12 @@ def render():
                         agencia=agencia,
                     )
                     if resultado:
-                        st.success("✅ Registro guardado correctamente en la base de datos.")
+                        st.success(
+                            "✅ Registro guardado correctamente en la base de datos."
+                        )
                     else:
-                        st.error("❌ No se pudo guardar el registro. Revisa la conexión a BD.")
+                        st.error(
+                            "❌ No se pudo guardar el registro. Revisa la conexión a BD."
+                        )
     else:
         st.info("Selecciona origen y destino para ver el resumen.")
