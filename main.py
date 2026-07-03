@@ -63,11 +63,12 @@ def _show_nav_and_content():
     """Muestra navegación + contenido según vista seleccionada."""
     with st.sidebar:
         rol = st.session_state.get("rol", "")
-        opciones = [
-            "🚛 Cotización Comercial",
-            "📊 Cotización Comercial Masivo",
-            "📝 Registro Fletes Plaza",
-        ]
+        opciones = []
+        if rol in ("ADMIN", "COMERCIAL"):
+            opciones.append("🚛 Cotización Comercial")
+            opciones.append("📊 Cotización Comercial Masivo")
+        if rol in ("ADMIN", "FLETES"):
+            opciones.append("📝 Registro Fletes Plaza")
         if rol == "ADMIN":
             opciones.append("👥 Crear Usuario")
 

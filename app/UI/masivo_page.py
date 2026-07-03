@@ -245,40 +245,53 @@ def render():
         else "template_sicetac.xlsx"
     )
 
-    st.download_button(
-        "Descargar plantilla Excel",
-        data=template_bytes,
-        file_name=file_name,
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
-    st.button(
-        "Refrescar caché SICETAC",
-        on_click=refrescar_cache,
-        disabled=st.session_state.loading,
-    )
-    st.caption("Descarga la plantilla, completa los datos, súbela y procesa.")
+    # Card 1: Plantilla
+    with st.container(border=True):
+        st.markdown("### 📥 Plantilla")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(
+                "Descargar plantilla Excel",
+                data=template_bytes,
+                file_name=file_name,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+            )
+        with col2:
+            st.button(
+                "Refrescar caché SICETAC",
+                on_click=refrescar_cache,
+                disabled=st.session_state.loading,
+                use_container_width=True,
+            )
+        st.caption("Descarga la plantilla, completa los datos y súbela para procesar.")
 
-    excel_file = st.file_uploader(
-        "Sube un archivo Excel con las rutas a procesar",
-        type=["xlsx", "xls"],
-        key="excel_file",
-    )
-
-    if excel_file:
-        st.button(
-            "Procesar archivo Excel",
-            on_click=procesar_excel,
-            args=(excel_file,),
-            disabled=st.session_state.loading,
+    # Card 2: Cargar archivo
+    with st.container(border=True):
+        st.markdown("### 📤 Cargar archivo")
+        excel_file = st.file_uploader(
+            "Sube un archivo Excel con las rutas a procesar",
+            type=["xlsx", "xls"],
+            key="excel_file",
         )
+        if excel_file:
+            st.button(
+                "Procesar archivo Excel",
+                on_click=procesar_excel,
+                args=(excel_file,),
+                disabled=st.session_state.loading,
+                type="primary",
+            )
 
+    # Card 3: Resultados
     if "excel_result" in st.session_state and st.session_state.excel_result is not None:
-        st.markdown("### ✅ Resultado del archivo Excel")
-        st.dataframe(st.session_state.excel_result.to_pandas())
-        excel_bytes = _to_excel_bytes(st.session_state.excel_result)
-        st.download_button(
-            "Descargar Excel con costo SICETAC",
-            data=excel_bytes,
-            file_name="resultado_sicetac.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
+        with st.container(border=True):
+            st.markdown("### 📊 Resultados")
+            st.dataframe(st.session_state.excel_result.to_pandas())
+            excel_bytes = _to_excel_bytes(st.session_state.excel_result)
+            st.download_button(
+                "Descargar Excel con costo SICETAC",
+                data=excel_bytes,
+                file_name="resultado_sicetac.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
