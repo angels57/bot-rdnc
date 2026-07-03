@@ -4,6 +4,14 @@ from sqlalchemy.orm import DeclarativeBase
 
 from app.models.flete import Base
 
+# Fuente única de verdad de los roles asignables a un usuario.
+# El orden se respeta en los selectores de la interfaz.
+# - ADMIN:     acceso total.
+# - FLETES:    registro de fletes plaza.
+# - COMERCIAL: cotización comercial + reporte.
+# - REPORTES:  acceso de solo lectura, únicamente a la vista de Reporte.
+ROLES = ["ADMIN", "FLETES", "COMERCIAL", "REPORTES"]
+
 
 class Usuario(Base):
     __tablename__ = "usuarios"

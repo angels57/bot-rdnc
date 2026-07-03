@@ -9,6 +9,7 @@ from app.db.crud import (
     listar_usuarios,
     resetear_password,
 )
+from app.models.usuario import ROLES
 from app.UI.formulario_page import AGENCIAS
 
 
@@ -27,9 +28,7 @@ def render():
         with st.form("crear_usuario_form"):
             nombres = st.text_input("Nombres", placeholder="ej: Juan")
             apellidos = st.text_input("Apellidos", placeholder="ej: Doe")
-            role = st.selectbox(
-                "Rol", ["ADMIN", "FLETES", "COMERCIAL"], key="crear_role"
-            )
+            role = st.selectbox("Rol", ROLES, key="crear_role")
             agencia = st.selectbox("Agencia", AGENCIAS_USUARIO, key="crear_agencia")
             submitted = st.form_submit_button("Crear usuario", type="primary")
 
@@ -87,8 +86,10 @@ def render():
                         )
                         nuevo_role = st.selectbox(
                             "Rol",
-                            ["ADMIN", "FLETES", "COMERCIAL"],
-                            index=["ADMIN", "FLETES", "COMERCIAL"].index(u.usr_role),
+                            ROLES,
+                            index=ROLES.index(u.usr_role)
+                            if u.usr_role in ROLES
+                            else 0,
                             key=f"role_{u.usr_nick}",
                         )
                         agencia_actual = (

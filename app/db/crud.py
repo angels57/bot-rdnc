@@ -8,7 +8,7 @@ from datetime import datetime
 from app.core import get_app_logger
 from app.db.session import get_engine, get_session_factory
 from app.models.flete import Base, FleteRegistro
-from app.models.usuario import Usuario
+from app.models.usuario import ROLES, Usuario
 
 logger = get_app_logger("db_crud")
 
@@ -153,13 +153,13 @@ def crear_usuario(
 
 
 def listar_usuarios() -> list[Usuario]:
-    """Lista usuarios de los 3 roles permitidos."""
+    """Lista usuarios de todos los roles permitidos."""
     SessionLocal = get_session_factory()
     session = SessionLocal()
     try:
         return (
             session.query(Usuario)
-            .filter(Usuario.usr_role.in_(["ADMIN", "FLETES", "COMERCIAL"]))
+            .filter(Usuario.usr_role.in_(ROLES))
             .order_by(Usuario.usr_nick)
             .all()
         )

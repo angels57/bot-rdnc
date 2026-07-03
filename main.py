@@ -89,6 +89,8 @@ def _show_nav_and_content():
         if rol in ("ADMIN", "COMERCIAL"):
             opciones.append("🚛 Cotización Comercial")
             opciones.append("📊 Cotización Comercial Masivo")
+        # REPORTES es un rol de solo lectura: únicamente ve el Reporte.
+        if rol in ("ADMIN", "COMERCIAL", "REPORTES"):
             opciones.append("📈 Reporte")
         if rol in ("ADMIN", "FLETES"):
             opciones.append("📝 Registro Fletes Plaza")
