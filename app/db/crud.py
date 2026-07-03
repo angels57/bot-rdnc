@@ -3,6 +3,7 @@ import string
 import unicodedata
 
 import bcrypt
+from datetime import datetime
 
 from app.core import get_app_logger
 from app.db.session import get_engine, get_session_factory
@@ -14,13 +15,14 @@ logger = get_app_logger("db_crud")
 
 def _generar_nick(nombres: str, apellidos: str, session) -> str:
     """Genera un nick único: primera letra del nombre + apellido."""
+
     def limpiar(texto: str) -> str:
         texto = unicodedata.normalize("NFKD", texto.lower())
         texto = texto.encode("ascii", "ignore").decode("ascii")
         return texto.strip()
-    
+
     base = limpiar(nombres)[0] + limpiar(apellidos).replace(" ", "")
-    
+
     nick = base
     contador = 1
     while session.query(Usuario).filter(Usuario.usr_nick == nick).first():
@@ -108,6 +110,7 @@ def crear_usuario(
     nombres: str,
     apellidos: str,
     role: str,
+    agencia: str,
 ) -> dict | None:
     """Crea un usuario con nick y contraseña auto-generados.
 
@@ -134,6 +137,8 @@ def crear_usuario(
             usr_apellidos=apellidos.strip(),
             usr_password=hashed,
             usr_role=role,
+            fecha_creacion=datetime.now(),
+            usr_agencia=agencia,
         )
         session.add(nuevo)
         session.commit()
@@ -170,19 +175,19 @@ def actualizar_usuario(
     nombres: str,
     apellidos: str,
     role: str,
+    agencia: str,
 ) -> bool:
     """Actualiza nombres, apellidos y rol de un usuario."""
     SessionLocal = get_session_factory()
     session = SessionLocal()
     try:
-        usuario = session.query(Usuario).filter(
-            Usuario.usr_nick == nick
-        ).first()
+        usuario = session.query(Usuario).filter(Usuario.usr_nick == nick).first()
         if not usuario:
             return False
         usuario.usr_nombres = nombres.strip()
         usuario.usr_apellidos = apellidos.strip()
         usuario.usr_role = role
+        usuario.usr_agencia = agencia
         session.commit()
         logger.info(f"Usuario actualizado: {nick}")
         return True
@@ -194,14 +199,31 @@ def actualizar_usuario(
         session.close()
 
 
+def actualizar_ultima_conexion(nick: str) -> None:
+    """Actualiza la fecha de última conexión de un usuario."""
+    SessionLocal = get_session_factory()
+    session = SessionLocal()
+    try:
+        usuario = (
+            session.query(Usuario).filter(Usuario.usr_nick == nick.strip()).first()
+        )
+        if usuario:
+            usuario.ultima_conexion = datetime.now()
+            session.commit()
+            logger.info(f"Última conexión actualizada: {nick}")
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error actualizando última conexión: {e}")
+    finally:
+        session.close()
+
+
 def resetear_password(nick: str) -> str | None:
     """Genera nueva contraseña, actualiza hash, retorna password plano."""
     SessionLocal = get_session_factory()
     session = SessionLocal()
     try:
-        usuario = session.query(Usuario).filter(
-            Usuario.usr_nick == nick
-        ).first()
+        usuario = session.query(Usuario).filter(Usuario.usr_nick == nick).first()
         if not usuario:
             return None
         alfabeto = string.ascii_letters + string.digits
@@ -227,9 +249,7 @@ def eliminar_usuario(nick: str) -> bool:
     SessionLocal = get_session_factory()
     session = SessionLocal()
     try:
-        usuario = session.query(Usuario).filter(
-            Usuario.usr_nick == nick
-        ).first()
+        usuario = session.query(Usuario).filter(Usuario.usr_nick == nick).first()
         if not usuario:
             return False
         session.delete(usuario)

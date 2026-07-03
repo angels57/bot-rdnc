@@ -12,6 +12,7 @@ from app.config.settings import settings
 from app.core import get_app_logger
 from app.db.session import get_session_factory
 from app.models.usuario import Usuario
+from app.db.crud import actualizar_ultima_conexion
 
 logger = get_app_logger("auth_service")
 
@@ -32,9 +33,9 @@ def autenticar(nick: str, password: str) -> dict | None:
     SessionLocal = get_session_factory()
     session = SessionLocal()
     try:
-        usuario = session.query(Usuario).filter(
-            Usuario.usr_nick == nick.strip()
-        ).first()
+        usuario = (
+            session.query(Usuario).filter(Usuario.usr_nick == nick.strip()).first()
+        )
 
         if not usuario:
             logger.warning(f"Usuario no encontrado: {nick}")
@@ -54,6 +55,7 @@ def autenticar(nick: str, password: str) -> dict | None:
             return None
 
         logger.info(f"Usuario autenticado: {nick} (rol: {usuario.usr_role})")
+        actualizar_ultima_conexion(usuario.usr_nick)
         return {
             "nick": usuario.usr_nick,
             "nombres": usuario.usr_nombres,
