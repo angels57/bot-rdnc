@@ -236,24 +236,13 @@ def render():
     else:
         st.dataframe(df_view, use_container_width=True, hide_index=True)
 
-    # Exportar (respeta el filtro activo): CSV y Excel
-    col_csv, col_xlsx = st.columns(2)
-    with col_csv:
-        st.download_button(
-            "📥 Exportar CSV",
-            data=df_view.to_csv(index=False).encode("utf-8"),
-            file_name="reporte_agencias.csv",
-            mime="text/csv",
-            use_container_width=True,
-        )
-    with col_xlsx:
-        st.download_button(
-            "📊 Exportar Excel",
-            data=_to_excel_bytes(df_view),
-            file_name="reporte_agencias.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True,
-        )
+    # Exportar a Excel (respeta el filtro activo)
+    st.download_button(
+        "📊 Exportar Excel",
+        data=_to_excel_bytes(df_view),
+        file_name="reporte_agencias.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
 
     st.caption(
         "El estado ✅/❌ y la columna *Registros* corresponden al rango elegido. "
