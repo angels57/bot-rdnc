@@ -5,6 +5,7 @@ no (semáforo ✅/❌), la cobertura total, un filtro rápido por estado, preset
 fecha y una alerta de agencias inactivas (sin registrar hace más de N días).
 """
 
+import io
 from datetime import date, datetime, timedelta
 
 import pandas as pd
@@ -20,6 +21,15 @@ logger = get_app_logger("reporte_page")
 
 # Lista maestra de agencias reales (se excluye el centinela "TODOS").
 AGENCIAS_REALES = [a for a in AGENCIAS if a != "TODOS"]
+
+
+def _to_excel_bytes(df: pd.DataFrame) -> bytes:
+    """Serializa un DataFrame a un archivo Excel (.xlsx) en memoria."""
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Reporte")
+    buffer.seek(0)
+    return buffer.read()
 
 
 def _rango_por_preset(preset: str) -> tuple[date, date]:
@@ -226,14 +236,24 @@ def render():
     else:
         st.dataframe(df_view, use_container_width=True, hide_index=True)
 
-    # Export CSV (respeta el filtro activo)
-    csv_bytes = df_view.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        "📥 Exportar CSV",
-        data=csv_bytes,
-        file_name="reporte_agencias.csv",
-        mime="text/csv",
-    )
+    # Exportar (respeta el filtro activo): CSV y Excel
+    col_csv, col_xlsx = st.columns(2)
+    with col_csv:
+        st.download_button(
+            "📥 Exportar CSV",
+            data=df_view.to_csv(index=False).encode("utf-8"),
+            file_name="reporte_agencias.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+    with col_xlsx:
+        st.download_button(
+            "📊 Exportar Excel",
+            data=_to_excel_bytes(df_view),
+            file_name="reporte_agencias.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True,
+        )
 
     st.caption(
         "El estado ✅/❌ y la columna *Registros* corresponden al rango elegido. "
