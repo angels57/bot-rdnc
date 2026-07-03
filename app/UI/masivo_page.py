@@ -3,6 +3,7 @@
 import io
 import os
 import unicodedata
+from datetime import datetime
 
 import polars as pl
 import streamlit as st
@@ -10,9 +11,20 @@ import streamlit as st
 from app.core import get_app_logger, sicetac_cache
 from app.data.validation_rules import validar_fila
 from app.models.sicetac import SicetacParams
+from app.services import obtener_ultimo_flete_registrado
 from app.UI.chat_page import get_bot
 
 logger = get_app_logger("masivo_page")
+
+
+def _fmt_fecha(iso: str | None) -> str:
+    """Formatea una fecha ISO (creado_en) a 'AAAA-MM-DD HH:MM'."""
+    if not iso:
+        return ""
+    try:
+        return datetime.fromisoformat(iso).strftime("%Y-%m-%d %H:%M")
+    except (ValueError, TypeError):
+        return str(iso)
 
 
 def _normalize_column_name(name: str) -> str:
@@ -146,12 +158,21 @@ def procesar_archivo_excel(file, bot) -> pl.DataFrame | None:
     filas_procesadas = []
     filas_con_error = 0
     filas_procesadas_exitosamente = 0
+    filas_con_flete = 0
 
     with st.spinner("Validando y procesando rutas desde Excel..."):
         for row in df.iter_rows(named=True):
             es_valida, errores = validar_fila(row, columns_map)
 
             fila = dict(row)
+
+            # Columnas de flete plaza (se rellenan si la ruta es válida)
+            fila["flete_plaza"] = ""
+            fila["flete_plaza_valor"] = ""
+            fila["flete_plaza_fecha"] = ""
+            fila["flete_plaza_fuente"] = ""
+            fila["flete_plaza_tipo"] = ""
+            fila["flete_plaza_agencia"] = ""
 
             if not es_valida:
                 fila["observacion"] = "; ".join(errores)
@@ -183,6 +204,24 @@ def procesar_archivo_excel(file, bot) -> pl.DataFrame | None:
                     else:
                         fila["costo_sicetac"] = ""
                         fila["costo_tonelada"] = ""
+
+                    # Último flete plaza registrado desde el formulario de fletes
+                    ultimo = obtener_ultimo_flete_registrado(
+                        origen=params.origen,
+                        destino=params.destino,
+                        configuracion=params.configuracion,
+                    )
+                    if ultimo:
+                        fila["flete_plaza"] = "✅ Sí"
+                        fila["flete_plaza_valor"] = f"${ultimo['tarifa']:,.0f}"
+                        fila["flete_plaza_fecha"] = _fmt_fecha(ultimo.get("creado_en"))
+                        fila["flete_plaza_fuente"] = ultimo.get("fuente", "")
+                        fila["flete_plaza_tipo"] = ultimo.get("tipo_flete", "")
+                        fila["flete_plaza_agencia"] = ultimo.get("agencia", "")
+                        filas_con_flete += 1
+                    else:
+                        fila["flete_plaza"] = "❌ No"
+
                     fila["observacion"] = ""
                     filas_procesadas_exitosamente += 1
                 except Exception as e:
@@ -195,7 +234,9 @@ def procesar_archivo_excel(file, bot) -> pl.DataFrame | None:
             filas_procesadas.append(fila)
 
     st.info(
-        f"✅ Filas procesadas: {filas_procesadas_exitosamente} | ⚠️ Filas con errores: {filas_con_error}"
+        f"✅ Filas procesadas: {filas_procesadas_exitosamente} | "
+        f"⚠️ Filas con errores: {filas_con_error} | "
+        f"📝 Con flete plaza: {filas_con_flete}"
     )
 
     return pl.from_dicts(filas_procesadas)
