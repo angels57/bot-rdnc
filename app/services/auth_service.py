@@ -61,6 +61,7 @@ def autenticar(nick: str, password: str) -> dict | None:
             "nombres": usuario.usr_nombres,
             "apellidos": usuario.usr_apellidos,
             "role": usuario.usr_role,
+            "agencia": usuario.usr_agencia,
         }
     except Exception as e:
         logger.error(f"Error en autenticacion: {e}")

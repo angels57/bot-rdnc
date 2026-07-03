@@ -262,3 +262,25 @@ def eliminar_usuario(nick: str) -> bool:
         return False
     finally:
         session.close()
+
+
+def get_usuario(nick: str) -> dict | None:
+    """Obtiene datos básicos de un usuario por nick."""
+    SessionLocal = get_session_factory()
+    session = SessionLocal()
+    try:
+        usuario = session.query(Usuario).filter(Usuario.usr_nick == nick).first()
+        if not usuario:
+            return None
+        return {
+            "nick": usuario.usr_nick,
+            "nombres": usuario.usr_nombres,
+            "apellidos": usuario.usr_apellidos,
+            "role": usuario.usr_role,
+            "agencia": usuario.usr_agencia,
+        }
+    except Exception as e:
+        logger.error(f"Error obteniendo usuario: {e}")
+        return None
+    finally:
+        session.close()

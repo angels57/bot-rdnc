@@ -114,6 +114,17 @@ def render():
                             )
                             if ok:
                                 st.success("✅ Cambios guardados.")
+                                # Si el usuario editado es el que está en session_state, actualizarlo también
+                                if u.usr_nick == st.session_state.get(
+                                    "usuario", {}
+                                ).get("nick"):
+                                    st.session_state.usuario = {
+                                        "nick": u.usr_nick,
+                                        "nombres": nuevos_nombres,
+                                        "apellidos": nuevos_apellidos,
+                                        "role": nuevo_role,
+                                        "agencia": nueva_agencia,
+                                    }
                                 st.rerun()
                             else:
                                 st.error("❌ No se pudo actualizar.")

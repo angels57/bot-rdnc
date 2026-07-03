@@ -4,6 +4,7 @@ import extra_streamlit_components as stx
 import streamlit as st
 
 from app.services.auth_service import verify_token
+from app.db.crud import get_usuario
 from app.UI.chat_page import render as render_cotizacion
 from app.UI.formulario_page import render as render_registro
 from app.UI.login_page import render_login
@@ -42,13 +43,20 @@ def main():
         if payload:
             # Cookie válida → restaurar sesión
             st.session_state.autenticado = True
-            st.session_state.usuario = {
-                "nick": payload["nick"],
-                "nombres": "",
-                "apellidos": "",
-                "role": payload["role"],
-            }
-            st.session_state.rol = payload["role"]
+            # Intentar cargar datos completos del usuario desde DB
+            usuario_db = get_usuario(payload["nick"]) if payload.get("nick") else None
+            if usuario_db:
+                st.session_state.usuario = usuario_db
+                st.session_state.rol = usuario_db.get("role")
+            else:
+                st.session_state.usuario = {
+                    "nick": payload["nick"],
+                    "nombres": "",
+                    "apellidos": "",
+                    "role": payload["role"],
+                    "agencia": None,
+                }
+                st.session_state.rol = payload["role"]
             st.rerun()
             return
         else:
@@ -62,6 +70,21 @@ def main():
 def _show_nav_and_content():
     """Muestra navegación + contenido según vista seleccionada."""
     with st.sidebar:
+        # Mostrar información del usuario en la parte superior izquierda
+        usuario = st.session_state.get("usuario", {})
+        nombre_completo = (
+            f"{usuario.get('nombres','').strip()} {usuario.get('apellidos','').strip()}".strip()
+        )
+        if not nombre_completo:
+            nombre_completo = usuario.get("nick", "")
+        agencia = usuario.get("agencia") or "N/A"
+        role_text = usuario.get("role", "")
+
+        if nombre_completo or role_text or agencia:
+            st.markdown(f"**{nombre_completo}**")
+            st.markdown(f"**Rol:** {role_text}  |  **Agencia:** {agencia}")
+            st.divider()
+
         rol = st.session_state.get("rol", "")
         opciones = []
         if rol in ("ADMIN", "COMERCIAL"):
